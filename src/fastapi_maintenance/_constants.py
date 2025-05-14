@@ -13,4 +13,4 @@ MAINTENANCE_MODE_ENV_VAR_NAME = "FASTAPI_MAINTENANCE_MODE"
 MAINTENANCE_MODE_LOCAL_FILE_NAME = "maintenance_mode.txt"
 
 # Default JSON response content
-DEFAULT_JSON_CONTENT = {"detail": "Service temporarily unavailable due to maintenance"}
+DEFAULT_JSON_RESPONSE_CONTENT = {"detail": "Service temporarily unavailable due to maintenance"}

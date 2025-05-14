@@ -24,7 +24,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.types import ASGIApp
 
 from ._constants import (
-    DEFAULT_JSON_CONTENT,
+    DEFAULT_JSON_RESPONSE_CONTENT,
     FORCE_MAINTENANCE_MODE_OFF_ATTR,
     FORCE_MAINTENANCE_MODE_ON_ATTR,
 )
@@ -171,7 +171,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
                 return cast(Callable[["Request"], "Response"], self.response_callback)(request)
         else:
             return JSONResponse(
-                content=DEFAULT_JSON_CONTENT,
+                content=DEFAULT_JSON_RESPONSE_CONTENT,
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 headers={"Retry-After": "3600"},
             )

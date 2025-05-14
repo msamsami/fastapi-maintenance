@@ -12,7 +12,6 @@ from ._constants import FORCE_MAINTENANCE_MODE_OFF_ATTR, FORCE_MAINTENANCE_MODE_
 
 RouteHandler = Callable[..., Any]
 
-
 __all__ = ["force_maintenance_mode_off", "force_maintenance_mode_on"]
 
 
