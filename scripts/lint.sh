@@ -3,6 +3,6 @@
 set -e
 set -x
 
-mypy src/fastapi_maintenance
-ruff check src/fastapi_maintenance tests docs_src
-ruff format src/fastapi_maintenance tests docs_src --check
+uv run mypy src/fastapi_maintenance
+uv run ruff check src/fastapi_maintenance tests docs_src
+uv run ruff format src/fastapi_maintenance tests docs_src --check
