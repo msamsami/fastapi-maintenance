@@ -1,0 +1,5 @@
+<svg viewBox="0 0 300 90" xmlns="http://www.w3.org/2000/svg">
+  <rect x="110" width="70" height="70" fill="#f97316" rx="10"/>
+  <path d="M145 14a7 7 0 0 1 7 7v2.8a4.2 4.2 0 0 0 4.2 4.2h2.8a7 7 0 0 1 0 14h-2.8a4.2 4.2 0 0 0-4.2 4.2v2.8a7 7 0 0 1-14 0v-2.8a4.2 4.2 0 0 0-4.2-4.2h-2.8a7 7 0 0 1 0-14h2.8a4.2 4.2 0 0 0 4.2-4.2v-2.8a7 7 0 0 1 7-7z" fill="#fff"/>
+  <text x="150" y="90" font-size="17" fill="#f97316" font-family="Calibri, sans-serif" font-weight="bold" text-anchor="middle">FastAPI Maintenance</text>
+</svg>
