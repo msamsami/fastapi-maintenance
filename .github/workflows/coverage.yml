@@ -1,0 +1,62 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - main
+  workflow_call:
+  workflow_dispatch:
+
+env:
+  UV_SYSTEM_PYTHON: 1
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install Dependencies
+        run: uv sync --all-extras --all-groups
+
+      - run: mkdir coverage
+
+      - name: Run tests with coverage
+        run: bash scripts/test.sh
+        env:
+          COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py${{ matrix.python-version }}
+          CONTEXT: ${{ runner.os }}-py${{ matrix.python-version }}
+
+      - name: Store coverage files
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: coverage
+          include-hidden-files: true
+
+      - run: ls -la coverage
+      - run: uv run coverage combine coverage
+      - run: uv run coverage report
+      - run: uv run coverage html --title "HTML Coverage for ${{ github.sha }}"
+      - run: uv run coverage xml
+
+      - name: Store coverage HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+          include-hidden-files: true
+
+      - name: Store coverage XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          include-hidden-files: true
