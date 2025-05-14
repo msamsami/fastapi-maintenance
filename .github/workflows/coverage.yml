@@ -37,14 +37,14 @@ jobs:
       - name: Store coverage files
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.python-version }}
+          name: coverage
           path: coverage
           include-hidden-files: true
 
       - run: ls -la coverage
       - run: uv run coverage combine coverage
       - run: uv run coverage report
-      - run: uv run coverage html --title "HTML Coverage for ${{ github.sha }}"
+      - run: uv run coverage html --title "Coverage for ${{ github.sha }}"
       - run: uv run coverage xml
 
       - name: Store coverage HTML
@@ -60,3 +60,10 @@ jobs:
           name: coverage-xml
           path: coverage.xml
           include-hidden-files: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          fail_ci_if_error: true
