@@ -1,0 +1,24 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: FastAPI-Maintenance
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Mehdi
+    family-names: Samsami
+    email: mehdisamsami@live.com
+repository-code: 'https://github.com/msamsami/fastapi-maintenance'
+abstract: >-
+  Flexible maintenance mode middleware for FastAPI
+  applications.
+keywords:
+  - fastapi
+  - maintenance
+  - offline
+  - unavailable
+  - '503'
+license: MIT
