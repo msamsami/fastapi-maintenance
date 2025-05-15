@@ -21,7 +21,7 @@ def force_maintenance_mode_off(func: RouteHandler) -> RouteHandler:
     Works with both sync and async functions.
 
     Args:
-        func: The route handler function (sync or async).
+        func: The route handler function.
 
     Returns:
         A wrapped function that will always bypass maintenance mode.
@@ -56,7 +56,7 @@ def force_maintenance_mode_on(func: RouteHandler) -> RouteHandler:
     Works with both sync and async functions.
 
     Args:
-        func: The route handler function (sync or async).
+        func: The route handler function.
 
     Returns:
         A wrapped function that will always return a maintenance response.
