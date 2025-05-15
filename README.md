@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/msamsami/fastapi-maintenance/main/docs/img/logo-type.svg" alt="FastAPI Maintenance">
+  <img src="https://raw.githubusercontent.com/msamsami/fastapi-maintenance/main/docs/img/header.svg" alt="FastAPI Maintenance">
 </p>
 <p align="center">
     <em>Flexible maintenance mode middleware for FastAPI applications.</em>
@@ -12,8 +12,9 @@
   <a href="https://pypi.org/project/fastapi-maintenance/">
     <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Supported Python versions">
   </a>
-  <a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/msamsami/fastapi-maintenance" target="_blank">
-    <img src="https://coverage-badge.samuelcolvin.workers.dev/msamsami/fastapi-maintenance.svg" alt="Coverage">
+  <a href="https://codecov.io/gh/msamsami/fastapi-maintenance" > 
+    <img src="https://codecov.io/gh/msamsami/fastapi-maintenance/graph/badge.svg?token=OO3XDXYCBW" alt="Coverage"/> 
+  </a>
   <a href="https://github.com/msamsami/fastapi-maintenance/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/msamsami/fastapi-maintenance?color=%2334D058" alt="License">
   </a>
@@ -36,12 +37,12 @@ The main goal of **FastAPI Maintenance** is to provide a developer-friendly way 
 
 The key features are:
 
-* ⚡ **Simple to use**: Add just a few lines of code to enable maintenance mode.
-* 🔌 **Pluggable storage backends**: Choose between environment variables, local files, or create your own.
-* 🛠️ **Per-route control**: Force maintenance mode on/off for specific routes.
-* 🎨 **Customizable responses**: Define your own maintenance page or custom JSON responses.
-* 🔄 **Context managers**: Temporarily enable/disable maintenance mode for specific operations.
-* 🧩 **Extensible**: Easy to extend with custom backends and callbacks.
+- **Simple to use**: Add just a few lines of code to enable maintenance mode.
+- **Pluggable storage backends**: Choose between environment variables, local files, or create your own.
+- **Per-route control**: Force maintenance mode on/off for specific routes.
+- **Customizable responses**: Define your own maintenance page or custom JSON responses.
+- **Context managers**: Temporarily enable/disable maintenance mode for specific operations.
+- **Extensible**: Easy to extend with custom backends and callbacks.
 
 ## Installation
 
@@ -66,7 +67,7 @@ async def root():
     return {"message": "Hello World"}
 ```
 
-By default, the middleware checks the `FASTAPI_MAINTENANCE_MODE` environment variable to see if maintenance mode is active. If it is not, the root endpoint will proceed to return its response:
+By default, the middleware checks the `FASTAPI_MAINTENANCE_MODE` environment variable to see if maintenance mode is active. If it's not, the root endpoint will proceed to return its response:
 ```json
 {"message":"Hello World"}
 ```
@@ -77,57 +78,18 @@ export FASTAPI_MAINTENANCE_MODE=1
 uvicorn main:app
 ```
 
-Now, the root endpoint will return a 503 Service Unavailable response with this error message:
+Now, the root endpoint will return a `503 Service Unavailable` response with this error message:
 ```json
 {"detail":"Service temporarily unavailable due to maintenance"}
 ```
 
-## Using API Controls
+## Decorators
 
-Create endpoints to toggle maintenance mode:
-
-```python
-from fastapi import FastAPI
-from fastapi_maintenance import (
-    MaintenanceModeMiddleware,
-    force_maintenance_mode_off,
-    set_maintenance_mode,
-)
-from fastapi_maintenance.backends import LocalFileBackend
-
-app = FastAPI()
-
-app.add_middleware(
-    MaintenanceModeMiddleware,
-    backend=LocalFileBackend(file_path="maintenance_mode.txt"),
-)
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.post("/admin/maintenance/enable")
-@force_maintenance_mode_off  # This endpoint is always accessible
-async def enable_maintenance():
-    await set_maintenance_mode(True)
-    return {"maintenance_mode": True}
-
-@app.post("/admin/maintenance/disable")
-@force_maintenance_mode_off  # This endpoint is always accessible
-async def disable_maintenance():
-    await set_maintenance_mode(False)
-    return {"maintenance_mode": False}
-```
-
-## Exempting Routes
-
-You can exempt specific routes from maintenance mode:
-
-### Using Decorators
+You can control maintenance mode behavior for specific routes using decorators:
 
 ```python
 from fastapi import FastAPI
-from fastapi_maintenance import MaintenanceModeMiddleware, force_maintenance_mode_off
+from fastapi_maintenance import MaintenanceModeMiddleware, force_maintenance_mode_off, force_maintenance_mode_on
 
 app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
@@ -135,30 +97,48 @@ app.add_middleware(MaintenanceModeMiddleware)
 @app.get("/status")
 @force_maintenance_mode_off
 async def status():
-    return {"status": "operational"}
+    return {"status": "operational"}  # Always accessible, even during maintenance
+
+@app.get("/deprecated")
+@force_maintenance_mode_on
+async def deprecated_endpoint():
+    return {"message": "This endpoint is deprecated"}  # Always returns maintenance response
 ```
 
-### Using Callbacks
+The `force_maintenance_mode_off` decorator keeps an endpoint accessible even when maintenance mode is enabled globally. Conversely, the `force_maintenance_mode_on` decorator forces an endpoint to always return the maintenance response, regardless of the global maintenance state.
 
-You can also use custom callback functions to determine which routes should be exempt:
+## Context Managers
+
+You can use context managers to temporarily change the maintenance state for specific operations:
 
 ```python
-from fastapi import Request
+from fastapi import FastAPI
+from fastapi_maintenance import MaintenanceModeMiddleware, maintenance_mode_on, maintenance_mode_off
 
-def is_exempt(request: Request) -> bool:
-    # Exempt health check endpoints
-    if request.url.path.startswith("/health"):
-        return True
-    # Exempt requests with special header
-    if request.headers.get("X-Admin-Key") == "secret-key":
-        return True
-    return False
+app = FastAPI()
+app.add_middleware(MaintenanceModeMiddleware)
 
-app.add_middleware(
-    MaintenanceModeMiddleware,
-    exempt_callback=is_exempt
-)
+@app.post("/deploy")
+async def deploy():
+    # Enable maintenance mode during deployment
+    async with maintenance_mode_on():
+        # Deployment logic here
+        await perform_deployment()
+    
+    # Maintenance mode is automatically disabled after the block
+    return {"status": "deployed"}
+
+@app.get("/health")
+async def health_check():
+    # Ensure API is accessible during health check
+    async with maintenance_mode_off():
+        # Health check logic
+        status = await check_system_health()
+    
+    return {"health": status}
 ```
+
+The `maintenance_mode_on` context manager temporarily enables maintenance mode for critical operations, while `maintenance_mode_off` ensures endpoints remain accessible even if maintenance mode is active globally.
 
 ## Customizing Responses
 
@@ -189,40 +169,6 @@ app.add_middleware(
     MaintenanceModeMiddleware,
     response_callback=custom_response
 )
-```
-
-## Context Managers for Temporary Maintenance
-
-You can use context managers to temporarily enable/disable maintenance mode:
-
-```python
-from fastapi import FastAPI
-from fastapi_maintenance import (
-    MaintenanceModeMiddleware,
-    maintenance_mode_on,
-    maintenance_mode_off,
-)
-
-app = FastAPI()
-app.add_middleware(MaintenanceModeMiddleware)
-
-@app.post("/start-deployment")
-async def start_deployment():
-    # Enable maintenance mode during deployment
-    async with maintenance_mode_on():
-        # Deployment logic here
-        await perform_deployment()
-
-    return {"status": "deployed"}
-
-@app.get("/check-database")
-async def check_database():
-    # Ensure API is accessible during database check
-    async with maintenance_mode_off():
-        # Database check logic
-        await check_database_health()
-
-    return {"database": "healthy"}
 ```
 
 ## License

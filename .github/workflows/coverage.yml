@@ -66,4 +66,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
+          slug: msamsami/fastapi-maintenance
           fail_ci_if_error: true
