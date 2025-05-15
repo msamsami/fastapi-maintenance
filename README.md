@@ -65,7 +65,7 @@ app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
 
 @app.get("/")
-async def root():
+def root():
     return {"message": "Hello World"}
 ```
 
@@ -113,7 +113,7 @@ app.add_middleware(MaintenanceModeMiddleware)
 # Always accessible, even during maintenance
 @app.get("/status")
 @force_maintenance_mode_off
-async def status():
+def status():
     return {"status": "operational"}
 
 # Always returns maintenance response
@@ -151,7 +151,7 @@ async def deploy():
     return {"status": "deployed"}
 
 @app.get("/health")
-async def health_check():
+def health_check():
     return {"status": "healthy"}
 ```
 
