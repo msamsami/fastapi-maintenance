@@ -12,8 +12,8 @@
   <a href="https://pypi.org/project/fastapi-maintenance/">
     <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Supported Python versions">
   </a>
-  <a href="https://codecov.io/gh/msamsami/fastapi-maintenance" > 
-    <img src="https://codecov.io/gh/msamsami/fastapi-maintenance/graph/badge.svg?token=OO3XDXYCBW" alt="Coverage"/> 
+  <a href="https://codecov.io/gh/msamsami/fastapi-maintenance" >
+    <img src="https://codecov.io/gh/msamsami/fastapi-maintenance/graph/badge.svg?token=OO3XDXYCBW" alt="Coverage"/>
   </a>
   <a href="https://github.com/msamsami/fastapi-maintenance/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/msamsami/fastapi-maintenance?color=%2334D058" alt="License">
@@ -124,7 +124,7 @@ async def deploy():
     async with maintenance_mode_on():
         # Deployment logic here
         await perform_deployment()
-    
+
     # Maintenance mode is automatically disabled after the block
     return {"status": "deployed"}
 
@@ -134,7 +134,7 @@ async def health_check():
     async with maintenance_mode_off():
         # Health check logic
         status = await check_system_health()
-    
+
     return {"health": status}
 ```
 
