@@ -5,9 +5,8 @@ import pytest
 from anyio import Path
 from pytest import LogCaptureFixture
 
+from fastapi_maintenance._constants import MAINTENANCE_MODE_ENV_VAR_NAME
 from fastapi_maintenance.backends import (
-    MAINTENANCE_MODE_ENV_VAR_NAME,
-    MAINTENANCE_MODE_LOCAL_FILE_NAME,
     BaseStateBackend,
     EnvVarBackend,
     LocalFileBackend,
@@ -221,25 +220,23 @@ async def test_local_file_backend_set_value_false(temp_file_path: str):
 
 
 @pytest.mark.anyio
-async def test_local_file_backend_uses_default_file_name_if_not_provided(tmp_path: SyncPath):
-    """Test that `LocalFileBackend` uses the default file name when none is provided."""
-    # This test implicitly relies on the _get_backend factory from core.py,
-    # but we can simulate its behavior here for LocalFileBackend directly or test _get_backend separately.
-    # For now, let's test LocalFileBackend with default name.
-    # We need to ensure the working directory for the test is predictable or use absolute paths.
-    # Using tmp_path for the default file name.
-    original_cwd = os.getcwd()
-    os.chdir(tmp_path)  # Change CWD to tmp_path so default file is created there
+async def test_local_file_backend_requires_file_path():
+    """Test that `LocalFileBackend` requires a file_path parameter."""
+    # This test verifies that LocalFileBackend requires file_path to be provided.
+    # Since the constructor directly accepts file_path as an argument and it's not nullable,
+    # we don't need to test for runtime exceptions when constructing LocalFileBackend.
+    # The type checker should catch this at compile time.
 
-    try:
-        backend = LocalFileBackend(file_path=MAINTENANCE_MODE_LOCAL_FILE_NAME)  # Use default name
-        # File should not exist initially, get_value should create it with '0'
-        assert not await backend.get_value()
-        default_file = tmp_path / MAINTENANCE_MODE_LOCAL_FILE_NAME
-        assert default_file.exists()
-        assert default_file.read_text() == "0"
+    # Instead, we'll verify the behavior through the _get_backend factory function
+    from fastapi_maintenance.backends import _get_backend
 
-        await backend.set_value(True)
-        assert default_file.read_text() == "1"
-    finally:
-        os.chdir(original_cwd)  # Restore CWD
+    # Test that file_path is required for "file" backend type
+    with pytest.raises(KeyError):
+        _get_backend("file", non_file_path_arg="some_value")
+
+    # Test that providing file_path works correctly
+    tmp_path = SyncPath("/tmp")
+    file_path = str(tmp_path / "test_file.txt")
+    backend = _get_backend("file", file_path=file_path)
+    assert isinstance(backend, LocalFileBackend)
+    assert backend.file_path == file_path

@@ -9,14 +9,15 @@ from httpx import ASGITransport, AsyncClient
 
 from fastapi_maintenance import (
     MaintenanceModeMiddleware,
-    configure_backend,
     force_maintenance_mode_off,
     force_maintenance_mode_on,
+    maintenance_mode_on,
     set_maintenance_mode,
 )
 from fastapi_maintenance._constants import DEFAULT_JSON_RESPONSE_CONTENT
+from fastapi_maintenance._core import _backend as core_backend  # For reset
+from fastapi_maintenance._core import configure_backend
 from fastapi_maintenance.backends import MAINTENANCE_MODE_ENV_VAR_NAME, LocalFileBackend
-from fastapi_maintenance.core import _backend as core_backend  # For reset
 
 CUSTOM_HTML_CONTENT = "<html><body><h1>Custom Maintenance</h1></body></html>"
 CUSTOM_JSON_CONTENT = {"error": "custom_maintenance", "message": "We are down for a bit!"}
@@ -73,8 +74,8 @@ def app_with_middleware() -> FastAPI:
 
 @pytest.mark.anyio
 async def test_middleware_maintenance_mode_on_init(app_with_middleware: FastAPI):
-    """Test that middleware initialized with `maintenance_mode=True` blocks regular routes."""
-    app_with_middleware.add_middleware(MaintenanceModeMiddleware, maintenance_mode=True)
+    """Test that middleware initialized with `enable_maintenance=True` blocks regular routes."""
+    app_with_middleware.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
     async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
         response = await client.get("/regular")
         assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -83,8 +84,8 @@ async def test_middleware_maintenance_mode_on_init(app_with_middleware: FastAPI)
 
 @pytest.mark.anyio
 async def test_middleware_maintenance_mode_off_init(app_with_middleware: FastAPI):
-    """Test that middleware initialized with `maintenance_mode=False` allows regular routes."""
-    app_with_middleware.add_middleware(MaintenanceModeMiddleware, maintenance_mode=False)
+    """Test that middleware initialized with `enable_maintenance=False` allows regular routes."""
+    app_with_middleware.add_middleware(MaintenanceModeMiddleware, enable_maintenance=False)
     async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
         response = await client.get("/regular")
         assert response.status_code == status.HTTP_200_OK
@@ -135,7 +136,7 @@ async def test_middleware_local_file_backend_on(app_with_middleware: FastAPI, te
 async def test_middleware_decorator_exemptions(app_with_middleware: FastAPI):
     """Test that decorators correctly override maintenance mode behavior for specific routes."""
     # Middleware is ON by init param
-    app_with_middleware.add_middleware(MaintenanceModeMiddleware, maintenance_mode=True)
+    app_with_middleware.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
     async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
         # Regular endpoint should be in maintenance
         response_regular = await client.get("/regular")
@@ -152,31 +153,31 @@ async def test_middleware_decorator_exemptions(app_with_middleware: FastAPI):
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("is_async_callback", [False, True])
-async def test_middleware_exempt_callback(app_with_middleware: FastAPI, is_async_callback: bool):
-    """Test exempt_callback with both synchronous and asynchronous callback functions."""
+@pytest.mark.parametrize("is_async_handler", [False, True])
+async def test_middleware_exempt_handler(app_with_middleware: FastAPI, is_async_handler: bool):
+    """Test exempt_handler with both synchronous and asynchronous handler functions."""
 
-    def sync_exempt_callback(request: Request) -> bool:
+    def sync_exempt_handler(request: Request) -> bool:
         return request.url.path == "/regular"  # Exempt only /regular
 
-    async def async_exempt_callback(request: Request) -> bool:
+    async def async_exempt_handler(request: Request) -> bool:
         await asyncio.sleep(0.001)
         return request.url.path == "/regular"
 
-    callback = async_exempt_callback if is_async_callback else sync_exempt_callback
+    handler = async_exempt_handler if is_async_handler else sync_exempt_handler
     app_with_middleware.add_middleware(
         MaintenanceModeMiddleware,
-        maintenance_mode=True,  # Maintenance is ON
-        exempt_callback=callback,
+        enable_maintenance=True,  # Maintenance is ON
+        exempt_handler=handler,
     )
 
     async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
-        # /regular is exempt by callback, should work
+        # /regular is exempt by handler, should work
         response_regular = await client.get("/regular")
         assert response_regular.status_code == status.HTTP_200_OK
         assert response_regular.json() == {"message": "Hello World"}
 
-        # /exempt_by_decorator is NOT exempt by this callback, but IS by its own decorator
+        # /exempt_by_decorator is NOT exempt by this handler, but IS by its own decorator
         # Decorator @force_maintenance_mode_off should take precedence over general maintenance mode
         response_exempt_deco = await client.get("/exempt_by_decorator")
         assert response_exempt_deco.status_code == status.HTTP_200_OK
@@ -184,14 +185,14 @@ async def test_middleware_exempt_callback(app_with_middleware: FastAPI, is_async
 
 
 @pytest.mark.anyio
-async def test_middleware_exempt_callback_path_not_exempt(app_with_middleware: FastAPI):
-    """Test that `exempt_callback` returning False keeps routes in maintenance mode."""
+async def test_middleware_exempt_handler_path_not_exempt(app_with_middleware: FastAPI):
+    """Test that `exempt_handler` returning False keeps routes in maintenance mode."""
 
-    def exempt_nothing_callback(request: Request) -> bool:
+    def exempt_nothing_handler(request: Request) -> bool:
         return False  # Nothing is exempt
 
     app_with_middleware.add_middleware(
-        MaintenanceModeMiddleware, maintenance_mode=True, exempt_callback=exempt_nothing_callback
+        MaintenanceModeMiddleware, enable_maintenance=True, exempt_handler=exempt_nothing_handler
     )
     async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
         response = await client.get("/regular")
@@ -200,12 +201,12 @@ async def test_middleware_exempt_callback_path_not_exempt(app_with_middleware: F
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
-    "is_async_callback, response_type", [(False, "html"), (True, "html"), (False, "json"), (True, "json")]
+    "is_async_handler, response_type", [(False, "html"), (True, "html"), (False, "json"), (True, "json")]
 )
-async def test_middleware_custom_response_callback(
-    app_with_middleware: FastAPI, is_async_callback: bool, response_type: str
+async def test_middleware_custom_response_handler(
+    app_with_middleware: FastAPI, is_async_handler: bool, response_type: str
 ):
-    """Test custom response callbacks (sync/async) returning different response types (HTML/JSON)."""
+    """Test custom response handlers (sync/async) returning different response types (HTML/JSON)."""
 
     def sync_html_response(request: Request) -> Response:
         return HTMLResponse(content=CUSTOM_HTML_CONTENT, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -222,18 +223,18 @@ async def test_middleware_custom_response_callback(
         return JSONResponse(content=CUSTOM_JSON_CONTENT, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     if response_type == "html":
-        callback = async_html_response if is_async_callback else sync_html_response
+        handler = async_html_response if is_async_handler else sync_html_response
         expected_content = CUSTOM_HTML_CONTENT
         expected_media_type = "text/html"
     else:  # json
-        callback = async_json_response if is_async_callback else sync_json_response
+        handler = async_json_response if is_async_handler else sync_json_response
         expected_content = CUSTOM_JSON_CONTENT
         expected_media_type = "application/json"
 
     app_with_middleware.add_middleware(
         MaintenanceModeMiddleware,
-        maintenance_mode=True,  # Maintenance is ON
-        response_callback=callback,
+        enable_maintenance=True,  # Maintenance is ON
+        response_handler=handler,
     )
 
     async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
@@ -298,7 +299,7 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
         return {"status": "off_path_param", "item_id": item_id}
 
     # Add the middleware properly
-    app.add_middleware(MaintenanceModeMiddleware, maintenance_mode=True)
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
 
     # Test the behavior of the middleware on different paths through HTTP requests
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -311,7 +312,7 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
         response_p2 = await client.get("/p2/on")
         assert response_p2.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
-        # Regular path with no decorator - should be in maintenance (because maintenance_mode=True)
+        # Regular path with no decorator - should be in maintenance (because enable_maintenance=True)
         response_p3 = await client.get("/p3/regular")
         assert response_p3.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
@@ -326,13 +327,13 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
 
 
 @pytest.mark.anyio
-async def test_middleware_force_on_takes_precedence_over_exempt_callback_and_force_off_decorator(
+async def test_middleware_force_on_takes_precedence_over_exempt_handler_and_force_off_decorator(
     app_with_middleware: FastAPI,
 ):
-    """Test that `force_maintenance_mode_on` takes precedence over `exempt_callback` and `force_maintenance_mode_off`."""
+    """Test that `force_maintenance_mode_on` takes precedence over `exempt_handler` and `force_maintenance_mode_off`."""
     # Scenario: Path is forced ON by decorator.
     # It also has a force_maintenance_mode_off decorator (which is contradictory, last one usually wins or it's an error)
-    # And an exempt_callback would exempt it.
+    # And an exempt_handler would exempt it.
     # The `force_maintenance_mode_on` on the route itself should be the ultimate decider for that route.
 
     # Let's redefine an endpoint for this specific scenario:
@@ -342,15 +343,15 @@ async def test_middleware_force_on_takes_precedence_over_exempt_callback_and_for
     async def complex_force_on_endpoint():  # pragma: no cover
         return {"message": "Complex force on - should not be seen"}
 
-    def always_exempt_callback(request: Request) -> bool:
+    def always_exempt_handler(request: Request) -> bool:
         return True  # Exempts everything if it were to be checked
 
     # Middleware uses the app instance which now has the new route
     # Initialize middleware with general maintenance OFF, but path is forced ON
     app_with_middleware.add_middleware(
         MaintenanceModeMiddleware,
-        maintenance_mode=False,  # General maintenance is OFF
-        exempt_callback=always_exempt_callback,
+        enable_maintenance=False,  # General maintenance is OFF
+        exempt_handler=always_exempt_handler,
     )
 
     async with AsyncClient(
@@ -362,6 +363,131 @@ async def test_middleware_force_on_takes_precedence_over_exempt_callback_and_for
         response_regular = await client.get("/regular")
         assert response_regular.status_code == status.HTTP_200_OK
 
-        # Regular endpoint should be fine because general maintenance is False and callback would exempt
-        # but here, because the callback also exempts, and general is false, it should pass.
+        # Regular endpoint should be fine because general maintenance is False and handler would exempt
+        # but here, because the handler also exempts, and general is false, it should pass.
         # The key is that forced_on on a path overrides everything else for that path.
+
+
+@pytest.mark.anyio
+async def test_context_on_vs_decorator_force_off(app_with_middleware: FastAPI, temp_file_path: str):
+    """
+    Test that `@force_maintenance_mode_off` overrides `maintenance_mode_on()` context.
+    Precedence: @force_off (decorator, level 2) > context_on (level 4)
+    """
+    configure_backend("file", file_path=temp_file_path)
+    await set_maintenance_mode(False)  # Global maintenance is OFF
+
+    # Add middleware. It will use the globally configured backend (file backend)
+    # as enable_maintenance is not set and no specific backend is passed to it.
+    app_with_middleware.add_middleware(MaintenanceModeMiddleware)
+
+    async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
+        # Initial check: /exempt_by_decorator (forced_off) is OK, /regular is OK
+        assert (await client.get("/exempt_by_decorator")).status_code == status.HTTP_200_OK
+        assert (await client.get("/regular")).status_code == status.HTTP_200_OK
+
+        async with maintenance_mode_on():  # Activates maintenance via file backend
+            # Inside context: /exempt_by_decorator (forced_off) should still be OK
+            response_exempt = await client.get("/exempt_by_decorator")
+            assert response_exempt.status_code == status.HTTP_200_OK
+            assert response_exempt.json() == {"message": "Always works"}
+
+            # Inside context: /regular should be 503 due to maintenance_mode_on()
+            response_regular = await client.get("/regular")
+            assert response_regular.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # After context: /regular should be OK again (state restored)
+        assert (await client.get("/regular")).status_code == status.HTTP_200_OK
+        # And /exempt_by_decorator should remain OK
+        assert (await client.get("/exempt_by_decorator")).status_code == status.HTTP_200_OK
+
+
+@pytest.mark.anyio
+async def test_context_on_vs_exempt_handler(temp_file_path: str):
+    """
+    Test that `exempt_handler` overrides `maintenance_mode_on()` context.
+    Precedence: exempt_handler (level 3) > context_on (level 4)
+    """
+    configure_backend("file", file_path=temp_file_path)
+    await set_maintenance_mode(False)  # Global maintenance is OFF
+
+    app = FastAPI()
+
+    @app.get("/exempted_by_handler_rule")
+    async def exempted_route_by_handler():
+        return {"message": "Exempted by handler rule"}
+
+    @app.get("/normal_for_handler_context_test")
+    async def normal_route_for_handler_context():
+        return {"message": "Normal for handler context test"}
+
+    def custom_exempt_handler(request: Request) -> bool:
+        return request.url.path == "/exempted_by_handler_rule"
+
+    app.add_middleware(
+        MaintenanceModeMiddleware,
+        exempt_handler=custom_exempt_handler,
+        # Middleware will use configured file backend for its general state
+    )
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Initial check: both routes OK
+        assert (await client.get("/exempted_by_handler_rule")).status_code == status.HTTP_200_OK
+        assert (await client.get("/normal_for_handler_context_test")).status_code == status.HTTP_200_OK
+
+        async with maintenance_mode_on():  # Activates maintenance via file backend
+            # Inside context: /exempted_by_handler_rule should still be OK
+            response_exempted = await client.get("/exempted_by_handler_rule")
+            assert response_exempted.status_code == status.HTTP_200_OK
+            assert response_exempted.json() == {"message": "Exempted by handler rule"}
+
+            # Inside context: /normal_for_handler_context_test should be 503
+            response_normal = await client.get("/normal_for_handler_context_test")
+            assert response_normal.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # After context: /normal_for_handler_context_test should be OK again
+        assert (await client.get("/normal_for_handler_context_test")).status_code == status.HTTP_200_OK
+
+
+@pytest.mark.anyio
+async def test_context_on_uses_middleware_backend_implicitly(
+    app_with_middleware: FastAPI, temp_file_path: str, tmp_path: SyncPath
+):
+    """
+    Test that `maintenance_mode_on()` (with no args) uses the middleware-registered backend.
+    """
+    middleware_file_path = temp_file_path
+    middleware_backend = LocalFileBackend(file_path=middleware_file_path)
+    await middleware_backend.set_value(False)  # Middleware's backend state: OFF
+
+    # A different backend, configured as the global fallback.
+    # maintenance_mode_on() should NOT use this if middleware has its own.
+    other_file_path = str(tmp_path / "other_maintenance_file.txt")
+    other_backend = LocalFileBackend(file_path=other_file_path)
+    await other_backend.set_value(False)  # Other backend state: OFF
+    configure_backend("file", file_path=other_file_path)  # Set as global fallback
+
+    # Add middleware, providing it with its own specific backend.
+    # This action registers 'middleware_backend' via register_middleware_backend().
+    app_with_middleware.add_middleware(MaintenanceModeMiddleware, backend=middleware_backend)
+
+    async with AsyncClient(transport=ASGITransport(app=app_with_middleware), base_url="http://test") as client:
+        # Initial state: all backends OFF, /regular is OK
+        assert not await middleware_backend.get_value()
+        assert not await other_backend.get_value()
+        assert (await client.get("/regular")).status_code == status.HTTP_200_OK
+
+        # maintenance_mode_on() called with no arguments.
+        # It should pick 'middleware_backend' because the middleware registered it.
+        async with maintenance_mode_on():
+            assert await middleware_backend.get_value()  # Middleware's backend became ON
+            assert not await other_backend.get_value()  # Global fallback backend remains OFF
+
+            # /regular route should be 503 because middleware_backend (used by middleware) is ON
+            response_regular = await client.get("/regular")
+            assert response_regular.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # After context: middleware_backend restored to OFF
+        assert not await middleware_backend.get_value()
+        assert not await other_backend.get_value()  # Still OFF
+        assert (await client.get("/regular")).status_code == status.HTTP_200_OK

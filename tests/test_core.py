@@ -4,23 +4,16 @@ from pathlib import Path as SyncPath
 import pytest
 from pytest import LogCaptureFixture
 
-from fastapi_maintenance import (
-    configure_backend,
-    get_maintenance_mode,
-    maintenance_mode_off,
-    maintenance_mode_on,
-    set_maintenance_mode,
+from fastapi_maintenance import get_maintenance_mode, set_maintenance_mode
+from fastapi_maintenance._core import (
+    _backend as core_backend,  # For inspecting internal state
 )
+from fastapi_maintenance._core import _get_default_backend, configure_backend
 from fastapi_maintenance.backends import (
     MAINTENANCE_MODE_ENV_VAR_NAME,
-    MAINTENANCE_MODE_LOCAL_FILE_NAME,
     EnvVarBackend,
     LocalFileBackend,
 )
-from fastapi_maintenance.core import (
-    _backend as core_backend,  # For inspecting internal state
-)
-from fastapi_maintenance.core import _get_default_backend
 
 
 @pytest.fixture(autouse=True)
@@ -64,15 +57,15 @@ async def test_get_default_backend_is_env_var_backend():
     # For this specific test, we explicitly ensure core_backend starts as None
     # to test the lazy initialization path.
     # We need to import core module to modify its _backend attribute
-    import fastapi_maintenance.core
+    import fastapi_maintenance._core
 
-    fastapi_maintenance.core._backend = None
+    fastapi_maintenance._core._backend = None
 
     backend = _get_default_backend()
     assert isinstance(backend, EnvVarBackend)
     assert backend.env_var_name is None  # It should use the default env var name
     # Also check that the module's global _backend is now set
-    assert fastapi_maintenance.core._backend is backend
+    assert fastapi_maintenance._core._backend is backend
 
 
 @pytest.mark.anyio
@@ -119,25 +112,24 @@ async def test_configure_backend_file_and_set_get(temp_file_path: str):
 
 
 @pytest.mark.anyio
-async def test_configure_backend_file_default_name(tmp_path: SyncPath):
-    """Test configuring a file backend with default file name."""
-    original_cwd = os.getcwd()
-    os.chdir(tmp_path)
-    try:
-        configure_backend("file")  # Use default file name
-        backend = _get_default_backend()
-        assert isinstance(backend, LocalFileBackend)
-        assert backend.file_path == MAINTENANCE_MODE_LOCAL_FILE_NAME
+async def test_configure_backend_file_requires_file_path(tmp_path: SyncPath):
+    """Test that configuring a file backend requires a file path."""
+    # The test now verifies that configure_backend("file") without file_path raises KeyError
+    with pytest.raises(KeyError, match="file_path"):
+        configure_backend("file")  # Should raise KeyError since file_path is now required
 
-        default_file = tmp_path / MAINTENANCE_MODE_LOCAL_FILE_NAME
-        assert not await get_maintenance_mode()
-        assert default_file.exists() and default_file.read_text() == "0"
+    # Verify that providing file_path works correctly
+    file_path = str(tmp_path / "maintenance.txt")
+    configure_backend("file", file_path=file_path)
+    backend = _get_default_backend()
+    assert isinstance(backend, LocalFileBackend)
+    assert backend.file_path == file_path
 
-        await set_maintenance_mode(True)
-        assert await get_maintenance_mode()
-        assert default_file.read_text() == "1"
-    finally:
-        os.chdir(original_cwd)
+    # Verify functionality still works with explicit file_path
+    assert not await get_maintenance_mode()
+    await set_maintenance_mode(True)
+    assert await get_maintenance_mode()
+    assert SyncPath(file_path).read_text() == "1"
 
 
 @pytest.mark.anyio
@@ -158,105 +150,5 @@ async def test_configure_backend_env_explicitly():
 @pytest.mark.anyio
 async def test_configure_backend_invalid_type():
     """Test that `configure_backend` raises ValueError when provided an invalid backend type."""
-    with pytest.raises(ValueError, match="Unsupported backend type: invalid_backend"):
+    with pytest.raises(ValueError, match="Unsupported backend type: 'invalid_backend'"):
         configure_backend("invalid_backend")
-
-
-@pytest.mark.anyio
-async def test_maintenance_mode_on_off_context_managers_with_file_backend(temp_file_path: str):
-    """Test `maintenance_mode_on` and `maintenance_mode_off` context managers with file backend."""
-    configure_backend("file", file_path=temp_file_path)
-    assert not await get_maintenance_mode()  # Start with maintenance mode OFF
-
-    async with maintenance_mode_on():
-        assert await get_maintenance_mode()  # Inside context: ON
-    assert not await get_maintenance_mode()  # Outside context: Restored to OFF
-
-    await set_maintenance_mode(True)  # Now set to ON globally
-    assert await get_maintenance_mode()
-
-    async with maintenance_mode_off():
-        assert not await get_maintenance_mode()  # Inside context: OFF
-    assert await get_maintenance_mode()  # Outside context: Restored to ON
-
-    # Test with explicit backend instance passed to context manager
-    # This test ensures the global backend isn't affected if a specific one is passed.
-    another_file_path = str(SyncPath(temp_file_path).parent / "another_maintenance.txt")
-    specific_backend = LocalFileBackend(file_path=another_file_path)
-    await specific_backend.set_value(False)  # Ensure this separate backend is off
-
-    # Global is ON
-    assert await get_maintenance_mode()
-    assert not await get_maintenance_mode(specific_backend)
-
-    async with maintenance_mode_on(backend=specific_backend):
-        assert await get_maintenance_mode()  # Global unchanged (still ON)
-        assert await get_maintenance_mode(specific_backend)  # Specific backend is ON
-    assert await get_maintenance_mode()  # Global unchanged (still ON)
-    assert not await get_maintenance_mode(specific_backend)  # Specific backend restored (OFF)
-
-    # Test nested contexts
-    await set_maintenance_mode(False)  # Global OFF
-    assert not await get_maintenance_mode()
-    async with maintenance_mode_on():  # Outer ON
-        assert await get_maintenance_mode()
-        async with maintenance_mode_off():  # Inner OFF
-            assert not await get_maintenance_mode()
-        assert await get_maintenance_mode()  # Back to outer ON
-    assert not await get_maintenance_mode()  # Back to global OFF
-
-
-@pytest.mark.anyio
-async def test_maintenance_mode_context_managers_with_env_backend_logs_warnings(caplog: LogCaptureFixture):
-    """Test that context managers log warnings when used with `EnvVarBackend` (which is read-only)."""
-    # Default is EnvVarBackend, should log warnings when trying to set
-    os.environ[MAINTENANCE_MODE_ENV_VAR_NAME] = "0"  # Start with OFF
-    assert not await get_maintenance_mode()
-
-    with caplog.at_level("WARNING"):
-        async with maintenance_mode_on():
-            # Attempts to set True, then read. Read will be from env var.
-            assert not await get_maintenance_mode()  # Stays OFF because env var is "0"
-    assert f"Cannot set maintenance mode state via environment variable {MAINTENANCE_MODE_ENV_VAR_NAME}" in caplog.text
-    # Check that it tried to set True and then restore to False (original value)
-    assert (
-        caplog.text.count(f"Cannot set maintenance mode state via environment variable {MAINTENANCE_MODE_ENV_VAR_NAME}")
-        == 2
-    )
-
-    caplog.clear()
-    os.environ[MAINTENANCE_MODE_ENV_VAR_NAME] = "1"  # Start with ON
-    assert await get_maintenance_mode()
-    with caplog.at_level("WARNING"):
-        async with maintenance_mode_off():
-            assert await get_maintenance_mode()  # Stays ON because env var is "1"
-    assert (
-        caplog.text.count(f"Cannot set maintenance mode state via environment variable {MAINTENANCE_MODE_ENV_VAR_NAME}")
-        == 2
-    )
-
-
-@pytest.mark.anyio
-async def test_override_maintenance_mode_exception_handling(temp_file_path: str):
-    """Test that context managers properly restore state even when exceptions occur."""
-    configure_backend("file", file_path=temp_file_path)
-    await set_maintenance_mode(False)  # Initial state: OFF
-
-    class MyException(Exception):
-        pass
-
-    with pytest.raises(MyException):
-        async with maintenance_mode_on():
-            assert await get_maintenance_mode()  # Should be ON
-            raise MyException("Test exception")
-
-    # Check if state was restored despite the exception
-    assert not await get_maintenance_mode()  # Should be OFF
-
-    # Check with initial state True
-    await set_maintenance_mode(True)  # Initial state: ON
-    with pytest.raises(MyException):
-        async with maintenance_mode_off():
-            assert not await get_maintenance_mode()  # Should be OFF
-            raise MyException("Test exception")
-    assert await get_maintenance_mode()  # Should be ON

@@ -87,7 +87,7 @@ async def test_decorators_integration_with_middleware():
         return {"message": "Normal"}
 
     # Middleware configured to be in maintenance mode by default
-    app.add_middleware(MaintenanceModeMiddleware, maintenance_mode=True)
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response_forced_off = await client.get("/forced_off")
