@@ -4,8 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastapi-maintenance"
-version = "0.1.0"
+dynamic = ["version"]
+authors = [
+    { name = "Mehdi Samsami", email = "mehdisamsami@live.com" },
+]
 description = "Flexible maintenance mode middleware for FastAPI applications."
+readme = "README.md"
 keywords = [
     "fastapi",
     "maintenance",
@@ -13,11 +17,7 @@ keywords = [
     "unavailable",
     "503",
 ]
-readme = "README.md"
 requires-python = ">=3.8"
-authors = [
-    { name = "Mehdi Samsami", email = "mehdisamsami@live.com" },
-]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -59,6 +59,12 @@ test = [
 [project.urls]
 "Homepage" = "https://github.com/msamsami/fastapi-maintenance"
 "Bug Tracker" = "https://github.com/msamsami/fastapi-maintenance/issues"
+
+[tool.hatch.version]
+path = "src/fastapi_maintenance/__init__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

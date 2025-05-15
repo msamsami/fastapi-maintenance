@@ -5,6 +5,10 @@ Easily toggle maintenance mode for your API with flexible configuration options 
 the ability to exempt specific endpoints from maintenance status.
 """
 
+__version__ = "0.1.0"
+__author__ = "Mehdi Samsami"
+
+
 from .core import (
     configure_backend,
     get_maintenance_mode,
