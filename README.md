@@ -12,6 +12,9 @@
   <a href="https://pypi.org/project/fastapi-maintenance/">
     <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Supported Python versions">
   </a>
+  <a href="https://github.com/msamsami/fastapi-maintenance/actions?query=workflow%3ATest+event%3Apush+branch%3Amain" target="_blank">
+    <img src="https://github.com/msamsami/fastapi-maintenance/actions/workflows/ci.yml/badge.svg?event=push&branch=main" alt="Test">
+  </a>
   <a href="https://codecov.io/gh/msamsami/fastapi-maintenance" >
     <img src="https://codecov.io/gh/msamsami/fastapi-maintenance/graph/badge.svg?token=OO3XDXYCBW" alt="Coverage"/>
   </a>
@@ -22,8 +25,7 @@
 
 ---
 
-**Documentation**: TBA
-<!-- <a href="https://msamsami.github.io/fastapi-maintenance" target="_blank">https://msamsami.github.io/fastapi-maintenance</a> -->
+**Documentation**: <a href="https://msamsami.github.io/fastapi-maintenance" target="_blank">https://msamsami.github.io/fastapi-maintenance</a>
 
 **Source Code**: <a href="https://github.com/msamsami/fastapi-maintenance" target="_blank">https://github.com/msamsami/fastapi-maintenance</a>
 
@@ -67,18 +69,28 @@ async def root():
     return {"message": "Hello World"}
 ```
 
-By default, the middleware checks the `FASTAPI_MAINTENANCE_MODE` environment variable to see if maintenance mode is active. If it's not, the root endpoint will proceed to return its response:
-```json
-{"message":"Hello World"}
+With the default configuration, the middleware checks the `FASTAPI_MAINTENANCE_MODE` environment variable to determine if maintenance mode is active. When it's not active, endpoints function normally.
+
+### Enabling Maintenance Mode
+
+You can enable maintenance mode in several ways:
+
+#### 1. Direct configuration
+```python
+# Enable maintenance mode when adding the middleware
+app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
 ```
 
-Set the environment variable before starting your application to activate the maintenance mode:
+#### 2. Using environment variables
 ```bash
+# Set before starting your application
 export FASTAPI_MAINTENANCE_MODE=1
 uvicorn main:app
 ```
 
-Now, the root endpoint will return a `503 Service Unavailable` response with this error message:
+### Maintenance Mode Response
+
+When maintenance mode is active, all endpoints (unless explicitly exempted) will return a `503 Service Unavailable` response:
 ```json
 {"detail":"Service temporarily unavailable due to maintenance"}
 ```
@@ -89,20 +101,26 @@ You can control maintenance mode behavior for specific routes using decorators:
 
 ```python
 from fastapi import FastAPI
-from fastapi_maintenance import MaintenanceModeMiddleware, force_maintenance_mode_off, force_maintenance_mode_on
+from fastapi_maintenance import (
+    MaintenanceModeMiddleware,
+    force_maintenance_mode_off,
+    force_maintenance_mode_on,
+)
 
 app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
 
+# Always accessible, even during maintenance
 @app.get("/status")
 @force_maintenance_mode_off
 async def status():
-    return {"status": "operational"}  # Always accessible, even during maintenance
+    return {"status": "operational"}
 
+# Always returns maintenance response
 @app.get("/deprecated")
 @force_maintenance_mode_on
 async def deprecated_endpoint():
-    return {"message": "This endpoint is deprecated"}  # Always returns maintenance response
+    return {"message": "This endpoint is deprecated"}
 ```
 
 The `force_maintenance_mode_off` decorator keeps an endpoint accessible even when maintenance mode is enabled globally. Conversely, the `force_maintenance_mode_on` decorator forces an endpoint to always return the maintenance response, regardless of the global maintenance state.
@@ -113,7 +131,11 @@ You can use context managers to temporarily change the maintenance state for spe
 
 ```python
 from fastapi import FastAPI
-from fastapi_maintenance import MaintenanceModeMiddleware, maintenance_mode_on, maintenance_mode_off
+from fastapi_maintenance import (
+    MaintenanceModeMiddleware,
+    maintenance_mode_off,
+    maintenance_mode_on,
+)
 
 app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
@@ -130,47 +152,11 @@ async def deploy():
 
 @app.get("/health")
 async def health_check():
-    # Ensure API is accessible during health check
-    async with maintenance_mode_off():
-        # Health check logic
-        status = await check_system_health()
-
-    return {"health": status}
+    return {"status": "healthy"}
 ```
 
-The `maintenance_mode_on` context manager temporarily enables maintenance mode for critical operations, while `maintenance_mode_off` ensures endpoints remain accessible even if maintenance mode is active globally.
-
-## Customizing Responses
-
-You can customize the maintenance mode response:
-
-```python
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi_maintenance import MaintenanceModeMiddleware
-
-app = FastAPI()
-
-async def custom_response(request: Request):
-    html_content = """
-    <html>
-        <head>
-            <title>Maintenance Mode</title>
-        </head>
-        <body>
-            <h1>Under Maintenance</h1>
-            <p>We'll be back shortly!</p>
-        </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content, status_code=503)
-
-app.add_middleware(
-    MaintenanceModeMiddleware,
-    response_callback=custom_response
-)
-```
+The `maintenance_mode_on` context manager temporarily enables maintenance mode for critical operations.
 
 ## License
 
-This project is licensed under the terms of the MIT license.
+This project is licensed under the terms of the [MIT license](https://github.com/msamsami/fastapi-maintenance/blob/main/LICENSE).
