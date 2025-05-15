@@ -11,7 +11,7 @@ from anyio import Path, open_file
 from pydantic import BoolError
 from pydantic.v1.validators import bool_validator
 
-from ._constants import MAINTENANCE_MODE_ENV_VAR_NAME, MAINTENANCE_MODE_LOCAL_FILE_NAME
+from ._constants import MAINTENANCE_MODE_ENV_VAR_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -70,14 +70,12 @@ class EnvVarBackend(BaseStateBackend):
 
     This backend is read-only. Attempts to set values will log a warning but not change
     the environment variable. Environment variables should be set before application startup.
+
+    Args:
+        env_var_name: Name of the environment variable to use. Defaults to None to use `FASTAPI_MAINTENANCE_MODE`.
     """
 
     def __init__(self, env_var_name: Optional[str] = None) -> None:
-        """Initialize with environment variable name.
-
-        Args:
-            env_var_name: Name of the environment variable to use. Defaults to `FASTAPI_MAINTENANCE_MODE`.
-        """
         self.env_var_name = env_var_name
 
     @property
@@ -121,16 +119,13 @@ class EnvVarBackend(BaseStateBackend):
 
 
 class LocalFileBackend(BaseStateBackend):
-    """
-    Store maintenance mode state in local file system.
+    """Store maintenance mode state in local file system.
+
+    Args:
+        file_path: Path to the file that stores the maintenance mode state.
     """
 
     def __init__(self, file_path: str) -> None:
-        """Initialize with file path for state storage.
-
-        Args:
-            file_path: Path to the file that stores the maintenance mode state.
-        """
         self.file_path = file_path
 
     async def get_value(self) -> bool:
@@ -171,10 +166,8 @@ def _get_backend(backend_type: str, **kwargs: Any) -> BaseStateBackend:
         ValueError: If the backend type is not supported.
     """
     if backend_type == "env":
-        env_var_name = kwargs.get("env_var_name")
-        return EnvVarBackend(env_var_name)
+        return EnvVarBackend(env_var_name=kwargs.get("env_var_name"))
     elif backend_type == "file":
-        file_path = kwargs.get("file_path", MAINTENANCE_MODE_LOCAL_FILE_NAME)
-        return LocalFileBackend(file_path)
+        return LocalFileBackend(file_path=kwargs["file_path"])
     else:
-        raise ValueError(f"Unsupported backend type: {backend_type}")
+        raise ValueError(f"Unsupported backend type: '{backend_type}'")
