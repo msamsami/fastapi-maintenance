@@ -7,20 +7,20 @@ from __future__ import annotations
 import asyncio
 import re
 import sys
-from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypeVar, Union, cast
-
-if TYPE_CHECKING:
-    from fastapi import Request, Response
+from typing import Awaitable, Callable, Optional, TypeVar, Union, cast
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
 else:
     from typing_extensions import ParamSpec
 
+
 from fastapi import status
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import Response
 from starlette.types import ASGIApp
 
 from ._constants import (
@@ -47,7 +47,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         app: The ASGI application.
         enable_maintenance: Boolean to explicitly enable (True) or disable (False) maintenance mode regardless of backend state. If specified, takes precedence over the backend's state value. Defaults to None to use the backend's state value.
         backend: Optional backend for state storage. Defaults to None for environment variable backend.
-        exempt_handler: Handler function (sync or async) that determines if a request should be exempt from maintenance mode. Defaults to None.
+        exempt_handler: Handler function (sync or async) that determines if a request should be exempt from maintenance mode. Defaults to None for no exemption.
         response_handler: Handler function (sync or async) to return a custom response during maintenance mode. Defaults to None for the default JSON response.
     """
 
@@ -56,8 +56,8 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         app: ASGIApp,
         enable_maintenance: Optional[bool] = None,
         backend: Optional[BaseStateBackend] = None,
-        exempt_handler: Optional[HandlerFunction[["Request"], bool]] = None,
-        response_handler: Optional[HandlerFunction[["Request"], "Response"]] = None,
+        exempt_handler: Optional[HandlerFunction[[Request], bool]] = None,
+        response_handler: Optional[HandlerFunction[[Request], Response]] = None,
     ) -> None:
         super().__init__(app)
         self.enable_maintenance = enable_maintenance
@@ -78,7 +78,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
             if getattr(route.endpoint, "__dict__", {}).get(FORCE_MAINTENANCE_MODE_OFF_ATTR, False):
                 self._forced_off_paths.append(route.path_regex)
 
-    async def dispatch(self, request: "Request", call_next: RequestResponseEndpoint) -> "Response":
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if not self._forced_paths_collected:
             self._collect_forced_maintenance_paths(request.app.routes)
             self._forced_paths_collected = True
@@ -121,7 +121,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
             return self.enable_maintenance
         return await get_maintenance_mode(self.backend)
 
-    def _is_path_forced_on(self, request: "Request") -> bool:
+    def _is_path_forced_on(self, request: Request) -> bool:
         """Check if the maintenance mode is forced on for the request's path.
 
         Args:
@@ -135,7 +135,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
                 return True
         return False
 
-    def _is_path_forced_off(self, request: "Request") -> bool:
+    def _is_path_forced_off(self, request: Request) -> bool:
         """Check if the maintenance mode is forced off for the request's path.
 
         Args:
@@ -149,7 +149,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
                 return True
         return False
 
-    async def _is_exempt(self, request: "Request") -> bool:
+    async def _is_exempt(self, request: Request) -> bool:
         """Check if the request is exempt from maintenance mode.
 
         Args:
@@ -167,7 +167,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
                     return True
         return False
 
-    async def _get_maintenance_response(self, request: "Request") -> "Response":
+    async def _get_maintenance_response(self, request: Request) -> Response:
         """Get the appropriate maintenance response.
 
         Args:
@@ -178,9 +178,9 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         """
         if self.response_handler is not None:
             if asyncio.iscoroutinefunction(self.response_handler):
-                return await cast(Callable[["Request"], Awaitable["Response"]], self.response_handler)(request)
+                return await cast(Callable[[Request], Awaitable[Response]], self.response_handler)(request)
             else:
-                return cast(Callable[["Request"], "Response"], self.response_handler)(request)
+                return cast(Callable[[Request], Response], self.response_handler)(request)
         else:
             return JSONResponse(
                 content=DEFAULT_JSON_RESPONSE_CONTENT,
