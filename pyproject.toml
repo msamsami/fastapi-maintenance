@@ -74,7 +74,6 @@ filterwarnings = ["ignore"]
 parallel = true
 data_file = "coverage/.coverage"
 source = [
-    "docs_src",
     "tests",
     "src/fastapi_maintenance"
 ]
