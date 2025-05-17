@@ -1,14 +1,16 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/msamsami/fastapi-maintenance/main/docs/img/header.svg" alt="FastAPI Maintenance">
+  <a href="https://msamsami.github.io/fastapi-maintenance">
+    <img src="https://raw.githubusercontent.com/msamsami/fastapi-maintenance/main/docs/img/header.svg" alt="FastAPI Maintenance">
+  </a>
 </p>
 <p align="center">
     <em>Flexible maintenance mode middleware for FastAPI applications.</em>
 </p>
 
 <p align="center">
-  <!-- <a href="https://pypi.org/project/fastapi-maintenance/">
-    <img src="https://img.shields.io/pypi/v/fastapi-maintenance?color=%2334D058&label=pypi%20package" alt="Package version">
-  </a> -->
+  <a href="https://pypi.org/project/fastapi-maintenance/">
+    <img src="https://img.shields.io/pypi/v/fastapi-maintenance?color=orange&label=pypi%20package" alt="Package version">
+  </a>
   <a href="https://pypi.org/project/fastapi-maintenance/">
     <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Supported Python versions">
   </a>
@@ -43,10 +45,10 @@ The key features are:
 - **Pluggable storage backends**: Choose between environment variables, local files, or create your own.
 - **Per-route control**: Force maintenance mode on/off for specific routes.
 - **Customizable responses**: Define your own maintenance page or custom JSON responses.
-- **Context managers**: Temporarily enable maintenance mode for specific operations.
+- **Context manager**: Temporarily enable maintenance mode for specific operations.
 - **Extensible**: Easy to extend with custom backends and handlers.
 
-## Installation
+## Install
 
 ```bash
 pip install fastapi-maintenance
@@ -64,6 +66,7 @@ from fastapi_maintenance import MaintenanceModeMiddleware
 
 app = FastAPI()
 
+# Add the middleware to your FastAPI application
 app.add_middleware(MaintenanceModeMiddleware)
 
 @app.get("/")
@@ -127,9 +130,9 @@ async def deprecated_endpoint():
 
 The `force_maintenance_mode_off` decorator keeps an endpoint accessible even when maintenance mode is enabled globally. Conversely, the `force_maintenance_mode_on` decorator forces an endpoint to always return the maintenance response, regardless of the global maintenance state.
 
-## Context Managers
+## Context Manager
 
-You can use context managers to temporarily change the maintenance state for specific operations:
+You can use context managers to temporarily enforce the maintenance state for specific operations:
 
 ```python
 from fastapi import FastAPI
