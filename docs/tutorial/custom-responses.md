@@ -155,16 +155,16 @@ app = FastAPI()
 
 async def content_negotiated_response(request: Request) -> Response:
     accept = request.headers.get("accept", "")
-    
+
     # Return HTML for browser requests
     if "text/html" in accept:
         html_content = "<html><body><h1>Under Maintenance</h1><p>Please check back later.</p></body></html>"
         return HTMLResponse(content=html_content, status_code=503)
-    
+
     # Return plain text for text requests
     if "text/plain" in accept:
         return PlainTextResponse(content="Service under maintenance. Please check back later.", status_code=503)
-    
+
     # Default to JSON
     return JSONResponse(
         content={"status": "maintenance", "message": "Service temporarily unavailable"},
@@ -241,14 +241,14 @@ app = FastAPI()
 async def path_aware_response(request: Request) -> JSONResponse:
     # Customize message based on path
     path = request.url.path
-    
+
     if path.startswith("/api/v1"):
         message = "API v1 is undergoing maintenance. Please use API v2."
     elif path.startswith("/api/v2"):
         message = "API v2 is being updated. Please try again later."
     else:
         message = "Service temporarily unavailable due to maintenance."
-    
+
     return JSONResponse(
         content={"detail": message, "path": path},
         status_code=503

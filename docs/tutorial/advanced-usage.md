@@ -1,6 +1,6 @@
 # Advanced Usage
 
-This section covers advanced usage patterns and integration scenarios for the FastAPI Maintenance package. These advanced usage patterns demonstrate how FastAPI Maintenance can be integrated into complex systems and workflows. 
+This section covers advanced usage patterns and integration scenarios for the FastAPI Maintenance package. These advanced usage patterns demonstrate how FastAPI Maintenance can be integrated into complex systems and workflows.
 
 ## Combining Multiple Features
 
@@ -64,8 +64,8 @@ You can use FastAPI's events to configure maintenance mode during application st
 ```python
 from fastapi import FastAPI
 from fastapi_maintenance import (
-    MaintenanceModeMiddleware, 
-    configure_backend, 
+    MaintenanceModeMiddleware,
+    configure_backend,
     set_maintenance_mode
 )
 
@@ -160,11 +160,11 @@ class APIBackend(BaseStateBackend):
     """
     Store maintenance mode state in an external API.
     """
-    
+
     def __init__(self, api_url: str, api_key: Optional[str] = None) -> None:
         self.api_url = api_url
         self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
-    
+
     async def get_value(self) -> bool:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{self.api_url}/maintenance", headers=self._headers) as response:
@@ -172,7 +172,7 @@ class APIBackend(BaseStateBackend):
                     data = await response.json()
                     return self._str_to_bool(str(data.get("active", False)))
                 return False
-    
+
     async def set_value(self, value: bool) -> None:
         async with aiohttp.ClientSession() as session:
             await session.post(
@@ -201,7 +201,7 @@ app.add_middleware(MaintenanceModeMiddleware)
 @force_maintenance_mode_off
 async def get_status():
     is_maintenance = await get_maintenance_mode()
-    
+
     if is_maintenance:
         return {
             "status": "maintenance",

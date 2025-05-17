@@ -14,17 +14,17 @@ class RedisBackend(BaseStateBackend):
     """
     Store maintenance mode state in Redis.
     """
-    
+
     def __init__(self, client: Redis, key: str = "fastapi_maintenance_mode"):
         self.client = client
         self.key = key
-    
+
     async def get_value(self) -> bool:
         value = await self.client.get(self.key)
         if value is None:
             return False
         return self._str_to_bool(value.decode("utf-8"))
-    
+
     async def set_value(self, value: bool) -> None:
         value_str = self._bool_to_str(value)
         await self.client.set(self.key, value_str)

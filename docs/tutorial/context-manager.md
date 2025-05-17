@@ -27,7 +27,7 @@ async def deploy():
         # Deployment logic here
         await perform_deployment()
         # When this block finishes, maintenance mode is automatically disabled
-    
+
     return {"status": "deployed"}
 ```
 
@@ -60,7 +60,7 @@ async def run_migration():
         # The maintenance_mode.txt file is updated to enable maintenance
         await perform_database_migration()
         # When done, the file is restored to its original state
-    
+
     return {"migration": "completed"}
 ```
 
@@ -87,7 +87,7 @@ async def update_system():
         # System enters maintenance mode
         await perform_update()
         # Maintenance mode is disabled when the context exits
-    
+
     return {"update": "completed"}
 ```
 
@@ -141,20 +141,20 @@ You can nest the `maintenance_mode_on` context manager. When nesting, the innerm
 async def complex_operation():
     # Start with maintenance OFF
     assert not await get_maintenance_mode()
-    
+
     async with maintenance_mode_on():
         # Now maintenance is ON
         assert await get_maintenance_mode()
-        
+
         # Nested context - maintenance stays ON
         async with maintenance_mode_on():
             # Still ON
             assert await get_maintenance_mode()
             await perform_nested_task()
-            
+
         # After inner context - still ON
         assert await get_maintenance_mode()
-        
+
     # After outer context - back to OFF
     assert not await get_maintenance_mode()
 ```

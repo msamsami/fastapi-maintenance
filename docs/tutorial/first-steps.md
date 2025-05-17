@@ -24,7 +24,7 @@ That's it! With just one line, your application now has maintenance mode capabil
 
 ## How It Works
 
-By default, the middleware checks the `FASTAPI_MAINTENANCE_MODE` environment variable to determine if maintenance mode is active. 
+By default, the middleware checks the `FASTAPI_MAINTENANCE_MODE` environment variable to determine if maintenance mode is active.
 
 - When maintenance mode is not active (default), all requests function normally.
 - When maintenance mode is active, all requests receive a 503 Service Unavailable response with a JSON body: `{"detail":"Service temporarily unavailable due to maintenance"}`.
@@ -76,7 +76,7 @@ curl -i http://localhost:8000/
 # content-type: application/json
 # retry-after: 3600
 # ...
-# 
+#
 # {"detail":"Service temporarily unavailable due to maintenance"}
 ```
 

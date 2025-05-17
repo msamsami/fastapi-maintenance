@@ -27,4 +27,4 @@ The middleware evaluates conditions in a specific sequence to determine whether 
 6.  **Default Action**:
     - **Behavior**: If none of the above conditions result in a maintenance response, the request proceeds to the next handler in the application.
 
-This order ensures that the most specific rules (like forcing a path on or off) take precedence, followed by general exemptions, and then broader states like the override context and the standard maintenance mode. This layered approach provides both flexibility and predictable behavior. 
+This order ensures that the most specific rules (like forcing a path on or off) take precedence, followed by general exemptions, and then broader states like the override context and the standard maintenance mode. This layered approach provides both flexibility and predictable behavior.

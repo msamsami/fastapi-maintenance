@@ -14,11 +14,11 @@ def is_exempt(request: Request) -> bool:
     # Exempt all paths starting with "/health"
     if request.url.path.startswith("/health"):
         return True
-    
+
     # Exempt requests with special header
     if request.headers.get("X-Admin-Key") == "supersecret":
         return True
-    
+
     return False
 
 app = FastAPI()
@@ -80,7 +80,7 @@ def is_exempt(request: Request) -> bool:
     except Exception:
         # Token validation failed, no exemption
         pass
-    
+
     return False
 ```
 
@@ -90,11 +90,11 @@ def is_exempt(request: Request) -> bool:
 def is_exempt(request: Request) -> bool:
     # Exempt internal networks
     client_host = request.client.host if request.client else None
-    
+
     # Exempt localhost and internal network
     if client_host in ["127.0.0.1", "::1"] or client_host.startswith("10."):
         return True
-    
+
     return False
 ```
 
@@ -105,15 +105,15 @@ def is_exempt(request: Request) -> bool:
     # Health check endpoints are always accessible
     if request.url.path.startswith("/health"):
         return True
-    
+
     # Read-only operations during partial maintenance
     if request.method in ["GET", "HEAD"] and not is_full_maintenance():
         return True
-    
+
     # Admin users can access everything
     if is_admin_user(request):
         return True
-    
+
     return False
 ```
 
@@ -125,10 +125,10 @@ The exempt handler can also be asynchronous:
 async def is_exempt(request: Request) -> bool:
     # Perform async operations like database queries
     user = await get_user_from_db(request.headers.get("X-User-ID"))
-    
+
     if user and user.is_admin:
         return True
-    
+
     return False
 
 app.add_middleware(

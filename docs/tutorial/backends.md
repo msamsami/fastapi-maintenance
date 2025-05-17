@@ -97,7 +97,7 @@ With writable backends (like the file backend), you can create endpoints to cont
 ```python
 from fastapi import FastAPI
 from fastapi_maintenance import (
-    MaintenanceModeMiddleware, 
+    MaintenanceModeMiddleware,
     set_maintenance_mode,
     get_maintenance_mode,
     force_maintenance_mode_off
