@@ -65,22 +65,21 @@ class BaseStateBackend(ABC):
 
 
 class EnvVarBackend(BaseStateBackend):
-    """
-    Read maintenance mode state from environment variables.
+    """Read maintenance mode state from environment variables.
 
     This backend is read-only. Attempts to set values will log a warning but not change
     the environment variable. Environment variables should be set before application startup.
 
     Args:
-        env_var_name: Name of the environment variable to use. Defaults to None to use `FASTAPI_MAINTENANCE_MODE`.
+        var_name: Name of the environment variable to use. Defaults to None to use `FASTAPI_MAINTENANCE_MODE`.
     """
 
-    def __init__(self, env_var_name: Optional[str] = None) -> None:
-        self.env_var_name = env_var_name
+    def __init__(self, var_name: Optional[str] = None) -> None:
+        self.var_name = var_name
 
     @property
-    def _env_var_name(self) -> str:
-        return self.env_var_name or MAINTENANCE_MODE_ENV_VAR_NAME
+    def _var_name(self) -> str:
+        return self.var_name or MAINTENANCE_MODE_ENV_VAR_NAME
 
     async def get_value(self) -> bool:
         """Get maintenance mode state from environment variable.
@@ -88,7 +87,7 @@ class EnvVarBackend(BaseStateBackend):
         Returns:
             A boolean indicating the current maintenance mode state.
         """
-        value = os.environ.get(self._env_var_name, "")
+        value = os.environ.get(self._var_name, "")
 
         try:
             return self._str_to_bool(value)
@@ -96,14 +95,13 @@ class EnvVarBackend(BaseStateBackend):
             pass
 
         logger.warning(
-            f"Invalid value '{value}' for environment variable {self._env_var_name}. "
+            f"Invalid value '{value}' for environment variable {self._var_name}. "
             f"Expected boolean-like value. Defaulting to False."
         )
         return False
 
     async def set_value(self, value: bool) -> None:
-        """
-        Attempt to set maintenance mode state (not supported for environment backend).
+        """Attempt to set maintenance mode state (not supported for environment backend).
 
         This method is deliberately made read-only since environment variables should not
         be modified at runtime. It will log a warning and do nothing.
@@ -112,7 +110,7 @@ class EnvVarBackend(BaseStateBackend):
             value: Desired maintenance mode state (ignored).
         """
         logger.warning(
-            f"Cannot set maintenance mode state via environment variable {self._env_var_name}. "
+            f"Cannot set maintenance mode state via environment variable {self._var_name}. "
             f"Environment variables are read-only during runtime. "
             f"Set the variable before starting your application."
         )
@@ -166,8 +164,8 @@ def _get_backend(backend_type: str, **kwargs: Any) -> BaseStateBackend:
         ValueError: If the backend type is not supported.
     """
     if backend_type == "env":
-        return EnvVarBackend(env_var_name=kwargs.get("env_var_name"))
+        return EnvVarBackend(**kwargs)
     elif backend_type == "file":
-        return LocalFileBackend(file_path=kwargs["file_path"])
+        return LocalFileBackend(**kwargs)
     else:
         raise ValueError(f"Unsupported backend type: '{backend_type}'")

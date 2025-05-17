@@ -31,7 +31,7 @@ app.add_middleware(
 # Or specify a custom environment variable name
 app.add_middleware(
     MaintenanceModeMiddleware,
-    backend=EnvVarBackend(env_var_name="MY_CUSTOM_MAINTENANCE_FLAG")
+    backend=EnvVarBackend(var_name="MY_CUSTOM_MAINTENANCE_FLAG")
 )
 ```
 

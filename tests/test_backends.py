@@ -120,7 +120,7 @@ async def test_env_var_backend_get_value_custom_env_var():
     """Test `EnvVarBackend` with a custom environment variable name."""
     custom_var_name = "MY_CUSTOM_MAINTENANCE_ENV_VAR"
     os.environ[custom_var_name] = "1"
-    backend = EnvVarBackend(env_var_name=custom_var_name)
+    backend = EnvVarBackend(var_name=custom_var_name)
     assert await backend.get_value()
     # Ensure default is not used
     del os.environ[custom_var_name]
@@ -231,7 +231,7 @@ async def test_local_file_backend_requires_file_path():
     from fastapi_maintenance.backends import _get_backend
 
     # Test that file_path is required for "file" backend type
-    with pytest.raises(KeyError):
+    with pytest.raises(TypeError):
         _get_backend("file", non_file_path_arg="some_value")
 
     # Test that providing file_path works correctly

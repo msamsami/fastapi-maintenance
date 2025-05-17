@@ -63,7 +63,7 @@ async def test_get_default_backend_is_env_var_backend():
 
     backend = _get_default_backend()
     assert isinstance(backend, EnvVarBackend)
-    assert backend.env_var_name is None  # It should use the default env var name
+    assert backend.var_name is None  # It should use the default env var name
     # Also check that the module's global _backend is now set
     assert fastapi_maintenance._core._backend is backend
 
@@ -114,9 +114,9 @@ async def test_configure_backend_file_and_set_get(temp_file_path: str):
 @pytest.mark.anyio
 async def test_configure_backend_file_requires_file_path(tmp_path: SyncPath):
     """Test that configuring a file backend requires a file path."""
-    # The test now verifies that configure_backend("file") without file_path raises KeyError
-    with pytest.raises(KeyError, match="file_path"):
-        configure_backend("file")  # Should raise KeyError since file_path is now required
+    # The test now verifies that configure_backend("file") without file_path raises TypeError
+    with pytest.raises(TypeError, match="file_path"):
+        configure_backend("file")  # Should raise TypeError since file_path is now required
 
     # Verify that providing file_path works correctly
     file_path = str(tmp_path / "maintenance.txt")
@@ -136,10 +136,10 @@ async def test_configure_backend_file_requires_file_path(tmp_path: SyncPath):
 async def test_configure_backend_env_explicitly():
     """Test explicitly configuring an `EnvVarBackend` with a custom environment variable name."""
     custom_env_var = "CUSTOM_TEST_VAR"
-    configure_backend("env", env_var_name=custom_env_var)
+    configure_backend("env", var_name=custom_env_var)
     backend = _get_default_backend()
     assert isinstance(backend, EnvVarBackend)
-    assert backend.env_var_name == custom_env_var
+    assert backend.var_name == custom_env_var
 
     os.environ[custom_env_var] = "1"
     assert await get_maintenance_mode()

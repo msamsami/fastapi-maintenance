@@ -47,8 +47,7 @@ def _get_default_backend() -> BaseStateBackend:
 async def get_maintenance_mode(backend: Optional[BaseStateBackend] = None) -> bool:
     """Get current maintenance mode state.
 
-    By default, this checks the `FASTAPI_MAINTENANCE_MODE` environment variable.
-    If using the default environment backend, the supported values are:
+    Supported values are:
     - Truthy values (case-insensitive): '1', 'yes', 'y', 'true', 't', 'on'
     - Falsy values (case-insensitive): '0', 'no', 'n', 'false', 'f', 'off'
 
@@ -70,14 +69,14 @@ async def set_maintenance_mode(value: bool, backend: Optional[BaseStateBackend] 
 
     Args:
         value: A boolean indicating the maintenance mode state to set.
-        backend: Optional backend instance to use instead of the default (environment variable backend).
+        backend: Optional backend instance to use instead of the default.
     """
     backend = backend or _get_default_backend()
     await backend.set_value(value)
 
 
 def configure_backend(backend_type: str, **kwargs: Any) -> None:
-    """Configure the default backend.
+    """Configure the default backend used to store and retrieve the maintenance mode state.
 
     Available backend types:
     - 'env': Read from environment variable (default, read-only)
@@ -86,8 +85,8 @@ def configure_backend(backend_type: str, **kwargs: Any) -> None:
     Args:
         backend_type: Type of backend ('env', 'file')
         **kwargs: Additional arguments to pass to the backend constructor.
-            - For 'env': env_var_name (optional, defaults to `FASTAPI_MAINTENANCE_MODE`)
-            - For 'file': file_path (optional)
+            - For 'env': var_name (optional, defaults to `FASTAPI_MAINTENANCE_MODE`)
+            - For 'file': file_path
     """
     global _backend
     _backend = _get_backend(backend_type, **kwargs)
