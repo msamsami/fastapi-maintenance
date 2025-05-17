@@ -46,7 +46,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
     Args:
         app: The ASGI application.
         enable_maintenance: Boolean to explicitly enable (True) or disable (False) maintenance mode regardless of backend state. If specified, takes precedence over the backend's state value. Defaults to None to use the backend's state value.
-        backend: Optional backend for state storage. Defaults to None for environment variable backend.
+        backend: Optional backend for maintenance mode state storage. Defaults to None for environment variable backend or another backend set by `configure_backend`.
         exempt_handler: Handler function (sync or async) that determines if a request should be exempt from maintenance mode. Defaults to None for no exemption.
         response_handler: Handler function (sync or async) to return a custom response during maintenance mode. Defaults to None for the default JSON response.
     """
@@ -65,7 +65,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         self.exempt_handler = exempt_handler
         self.response_handler = response_handler
 
-        register_middleware_backend(backend)
+        register_middleware_backend(self.backend)
         self._forced_on_paths: list[re.Pattern[str]] = []
         self._forced_off_paths: list[re.Pattern[str]] = []
         self._forced_paths_collected: bool = False
