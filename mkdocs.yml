@@ -1,0 +1,89 @@
+site_name: FastAPI Maintenance
+site_description: Flexible maintenance mode middleware for FastAPI applications.
+site_url: https://msamsami.github.io/fastapi-maintenance/
+theme:
+  name: material
+  font:
+    text: Inter
+    code: "Fira Code"
+  features:
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/lightbulb-auto
+        name: Switch to light mode
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to system preference
+  features:
+  - content.code.annotate
+  - content.code.copy
+  # - content.code.select
+  - content.footnote.tooltips
+  - content.tabs.link
+  - content.tooltips
+  - navigation.footer
+  - navigation.indexes
+  - navigation.instant
+  - navigation.instant.prefetch
+  # - navigation.instant.preview
+  - navigation.instant.progress
+  - navigation.path
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - navigation.top
+  - navigation.tracking
+  - search.highlight
+  - search.share
+  - search.suggest
+  - toc.follow
+
+  icon:
+    repo: fontawesome/brands/github-alt
+  logo: img/icon.svg
+  favicon: img/favicon.png
+  language: en
+repo_name: msamsami/fastapi-maintenance
+repo_url: https://github.com/msamsami/fastapi-maintenance
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed
+
+nav:
+  - Introduction: index.md
+  - Tutorial: 
+    - Overview: tutorial/index.md
+    - Install: tutorial/install.md
+    - First Steps: tutorial/first-steps.md
+    - Backends: tutorial/backends.md
+    - Custom Backends: tutorial/custom-backends.md
+    - Route Decorators: tutorial/decorators.md
+    - Context Manager: tutorial/context-manager.md
+    - Middleware Precedence: tutorial/middleware-precedence.md
+    - Custom Exemptions: tutorial/custom-exemptions.md
+    - Custom Responses: tutorial/custom-responses.md
+    - Advanced Usage: tutorial/advanced-usage.md
+  - Resources:
+    - Help: help.md
+    - Contributing: contributing.md
+  - Release Notes: release-notes.md
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/msamsami
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/msamsami
