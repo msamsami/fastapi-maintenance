@@ -57,8 +57,10 @@ test = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/msamsami/fastapi-maintenance"
-"Bug Tracker" = "https://github.com/msamsami/fastapi-maintenance/issues"
+Homepage = "https://github.com/msamsami/fastapi-maintenance"
+Documentation = "https://msamsami.github.io/fastapi-maintenance"
+Repository = "https://github.com/msamsami/fastapi-maintenance"
+Issues = "https://github.com/msamsami/fastapi-maintenance/issues"
 
 [tool.hatch.version]
 path = "src/fastapi_maintenance/__init__.py"
