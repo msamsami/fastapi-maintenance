@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 from anyio import Path, open_file
-from pydantic import BoolError
+from pydantic.v1.errors import BoolError
 from pydantic.v1.validators import bool_validator
 
 from ._constants import MAINTENANCE_MODE_ENV_VAR_NAME
