@@ -294,22 +294,20 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "coverage" },
+    { name = "httpx" },
     { name = "isort" },
     { name = "mypy" },
     { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-anyio" },
+    { name = "pytest-cov" },
     { name = "ruff" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 docs = [
     { name = "mkdocs" },
     { name = "mkdocs-material" },
-]
-test = [
-    { name = "coverage" },
-    { name = "httpx" },
-    { name = "pytest" },
-    { name = "pytest-anyio" },
-    { name = "pytest-cov" },
 ]
 
 [package.metadata]
@@ -320,22 +318,20 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "coverage", specifier = ">=7.6.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "isort", specifier = ">=5.13.2" },
     { name = "mypy", specifier = ">=1.14.1" },
     { name = "pre-commit", specifier = ">=3.5.0" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "pytest-anyio", specifier = ">=0.0.0" },
+    { name = "pytest-cov", specifier = ">=5.0.0" },
     { name = "ruff", specifier = ">=0.11.8" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.33.0" },
 ]
 docs = [
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-material", specifier = ">=9.6.13" },
-]
-test = [
-    { name = "coverage", specifier = ">=7.6.1" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "pytest-anyio", specifier = ">=0.0.0" },
-    { name = "pytest-cov", specifier = ">=5.0.0" },
 ]
 
 [[package]]
