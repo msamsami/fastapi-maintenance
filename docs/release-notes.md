@@ -2,6 +2,12 @@
 
 ## Latest Changes
 
+### Docs
+
+- Improve documentation with clearer examples, expanded tutorials, and better organization. PR [#3](https://github.com/msamsami/fastapi-maintenance/pull/3) by [@msamsami](https://github.com/msamsami).
+
+### Internal
+
 - Add Dependabot configuration for package updates using `uv`. PR [#2](https://github.com/msamsami/fastapi-maintenance/pull/2) by [@msamsami](https://github.com/msamsami).
 
 ## 0.0.2
