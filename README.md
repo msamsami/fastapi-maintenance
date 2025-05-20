@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="https://pypi.org/project/fastapi-maintenance/">
-    <img src="https://img.shields.io/pypi/v/fastapi-maintenance?color=orange&label=pypi%20package" alt="Package version">
+    <img src="https://img.shields.io/pypi/v/fastapi-maintenance?color=orange&label=pypi" alt="Package version">
   </a>
   <a href="https://pypi.org/project/fastapi-maintenance/">
     <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Supported Python versions">
@@ -35,9 +35,7 @@
 
 **FastAPI Maintenance** is a lightweight middleware for [FastAPI](https://fastapi.tiangolo.com/) applications that provides a flexible way to handle **maintenance mode**.
 
-The package offers a simple yet powerful solution to temporarily disable your API endpoints during maintenance windows, deployments, or system updates. It's designed to be easy to integrate, highly customizable, and extensible to fit various use cases.
-
-The main goal of **FastAPI Maintenance** is to provide a developer-friendly way to manage **application maintenance states** while ensuring a smooth experience for API consumers through customizable responses and fine-grained control over which routes remain accessible.
+The package provides a simple yet powerful solution to temporarily disable your API endpoints during **application maintenance states**. It ensures a smooth experience for API consumers through customizable responses and fine-grained control over which routes remain accessible. The package is designed to be easy to integrate, highly customizable, and extensible to fit various use cases.
 
 The key features are:
 
@@ -145,15 +143,15 @@ from fastapi_maintenance import (
 app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
 
-@app.post("/deploy")
-async def deploy():
-    # Enable maintenance mode during deployment
+@app.post("/sync")
+async def sync_data():
+    # Enable maintenance mode during data sync
     async with maintenance_mode_on():
-        # Deployment logic here
-        await perform_deployment()
+        # Data sync logic here
+        await perform_sync()
 
     # Maintenance mode is automatically disabled after the block
-    return {"status": "deployed"}
+    return {"status": "completed"}
 
 @app.get("/health")
 def health_check():

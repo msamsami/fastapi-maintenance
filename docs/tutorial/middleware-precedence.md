@@ -18,9 +18,9 @@ The middleware evaluates conditions in a specific sequence to determine whether 
 
 4.  **Maintenance Mode Override Context**:
     - **Behavior**: If the `maintenance_mode_on()` context manager is active, the middleware returns a maintenance response.
-    - **Why**: This allows for temporary, global activation of maintenance mode (e.g., during deployments). It applies if the request wasn't already allowed by a `@force_maintenance_mode_off` or an exemption.
+    - **Why**: This allows for temporary, global activation of maintenance mode. It applies if the request wasn't already allowed by a `@force_maintenance_mode_off` or an exemption.
 
-5.  **Global Maintenance Mode Active**:
+5.  **Global Active Maintenance Mode**:
     - **Behavior**: If maintenance mode is active by either being explicitly enabled or based on the configured backend (e.g., environment variable or file), the middleware returns a maintenance response.
     - **Why**: This is the standard, global maintenance check. It applies if no prior, more specific rule (like path-specific forcing, exemptions, or an active override context) has already handled the request.
 
