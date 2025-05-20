@@ -15,10 +15,12 @@ Follow along step-by-step to learn how to implement maintenance mode in your Fas
 
 By the end of this tutorial, you'll understand how to:
 
-1. Add maintenance mode capabilities to any FastAPI application
-2. Control which routes are affected by maintenance mode
-3. Store maintenance mode state in different backend systems
-4. Create custom maintenance responses
-5. Implement best practices for API availability management
+- Set up and configure maintenance mode middleware in your FastAPI application
+- Use different storage backends for maintenance state
+- Control maintenance mode behavior with route decorators and context managers
+- Create custom maintenance responses and exemptions for specific requests
+- Implement advanced patterns like content negotiation and template-based responses
+- Integrate maintenance mode with other middleware and application lifecycle events
+- Follow best practices for API availability management during maintenance
 
 Let's begin with the [installation guide](./install.md).
