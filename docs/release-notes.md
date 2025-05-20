@@ -8,6 +8,7 @@
 
 ### Internal
 
+- Merge test dependencies into dev group and add Ruff linting configuration. PR [#4](https://github.com/msamsami/fastapi-maintenance/pull/4) by [@msamsami](https://github.com/msamsami).
 - Add Dependabot configuration for package updates using `uv`. PR [#2](https://github.com/msamsami/fastapi-maintenance/pull/2) by [@msamsami](https://github.com/msamsami).
 
 ## 0.0.2
