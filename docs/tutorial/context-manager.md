@@ -1,11 +1,13 @@
 # Context Manager
 
-FastAPI Maintenance provides an async context manager that temporarily enables maintenance mode during specific operations and automatically restores the previous state when done. This approach is ideal for critical tasks where you need temporary downtime without manually toggling maintenance settings, such as:
+FastAPI Maintenance provides an async context manager that temporarily enables maintenance mode and automatically restores the previous state when done. This approach is ideal for critical tasks where you need temporary downtime without manually toggling maintenance settings, such as:
 
 - Database migrations
 - Application deployments
 - Data imports or exports
+- Content synchronization and updates
 - System updates
+- User permission and role updates
 - Rolling out new features
 - Temporarily disabling services during critical operations
 
@@ -20,15 +22,15 @@ from fastapi_maintenance import MaintenanceModeMiddleware, maintenance_mode_on
 app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
 
-@app.post("/admin/deploy")
-async def deploy():
-    # Temporarily enable maintenance mode during deployment
+@app.post("/admin/sync")
+async def sync_data():
+    # Temporarily enable maintenance mode during data sync
     async with maintenance_mode_on():
-        # Deployment logic here
-        await perform_deployment()
+        # Data sync logic here
+        await perform_sync()
         # When this block finishes, maintenance mode is automatically disabled
 
-    return {"status": "deployed"}
+    return {"status": "completed"}
 ```
 
 ## How It Works With Different Backends
@@ -91,29 +93,7 @@ async def update_system():
     return {"update": "completed"}
 ```
 
-The environment variable itself is never modified, but the maintenance mode is still effectively enabled for the duration of the context block.
-
-## Using With Middleware Backend
-
-When you add the middleware with a backend, that backend is automatically registered for use with the context manager:
-
-```python
-from fastapi import FastAPI
-from fastapi_maintenance import MaintenanceModeMiddleware, maintenance_mode_on
-
-app = FastAPI()
-app.add_middleware(MaintenanceModeMiddleware)  # Uses default environment variable backend
-
-@app.get("/deploy")
-async def deploy():
-    # This will automatically use the same backend as the middleware
-    async with maintenance_mode_on():
-        # Deployment logic here
-        await perform_deployment()
-
-    # Maintenance mode is automatically disabled after the block
-    return {"status": "deployed"}
-```
+**Note**: The environment variable itself is never modified, but the maintenance mode is still effectively enabled for the duration of the context block.
 
 ## Using With Custom Backend
 
