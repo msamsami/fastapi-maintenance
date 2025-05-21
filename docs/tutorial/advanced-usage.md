@@ -21,7 +21,7 @@ configure_backend("file", file_path="maintenance_mode.txt")
 
 app = FastAPI()
 
-# Custom response callback
+# Custom response handler
 async def custom_response(request: Request) -> JSONResponse:
     return JSONResponse(
         content={
@@ -33,14 +33,14 @@ async def custom_response(request: Request) -> JSONResponse:
         headers={"Retry-After": "1800"}
     )
 
-# Custom exemption callback
+# Custom exemption handler
 def is_exempt(request: Request) -> bool:
     # Allow monitoring tools
     if request.headers.get("User-Agent", "").startswith("Monitoring"):
         return True
     return False
 
-# Add middleware with custom callbacks
+# Add middleware with custom handlers
 app.add_middleware(
     MaintenanceModeMiddleware,
     response_handler=custom_response,
