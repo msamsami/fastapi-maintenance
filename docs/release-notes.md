@@ -4,7 +4,7 @@
 
 ### Internal
 
-- Make `_str_to_bool` method static in `BaseStateBackend` class. PR [#5](https://github.com/msamsami/fastapi-maintenance/pull/5) by [@msamsami](https://github.com/msamsami).
+- Make `_str_to_bool` method static in `BaseStateBackend` class. PR [#6](https://github.com/msamsami/fastapi-maintenance/pull/6) by [@msamsami](https://github.com/msamsami).
 - Merge test dependencies into dev group and add Ruff linting configuration. PR [#4](https://github.com/msamsami/fastapi-maintenance/pull/4) by [@msamsami](https://github.com/msamsami).
 - Add Dependabot configuration for package updates using `uv`. PR [#2](https://github.com/msamsami/fastapi-maintenance/pull/2) by [@msamsami](https://github.com/msamsami).
 
