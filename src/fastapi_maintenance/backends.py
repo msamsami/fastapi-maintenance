@@ -38,7 +38,8 @@ class BaseStateBackend(ABC):
             raise ValueError("state value is not correct")
         return value_str
 
-    def _str_to_bool(self, value: str) -> bool:
+    @staticmethod
+    def _str_to_bool(value: str) -> bool:
         """Convert string representation to boolean value.
 
         Uses Pydantic-style boolean parsing:
