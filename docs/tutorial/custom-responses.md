@@ -69,7 +69,7 @@ async def custom_maintenance_response(request: Request) -> JSONResponse:
 
 app.add_middleware(
     MaintenanceModeMiddleware,
-    response_callback=custom_maintenance_response
+    response_handler=custom_maintenance_response
 )
 ```
 
@@ -138,7 +138,7 @@ async def html_maintenance_page(request: Request) -> HTMLResponse:
 
 app.add_middleware(
     MaintenanceModeMiddleware,
-    response_callback=html_maintenance_page
+    response_handler=html_maintenance_page
 )
 ```
 
@@ -173,7 +173,7 @@ async def content_negotiated_response(request: Request) -> Response:
 
 app.add_middleware(
     MaintenanceModeMiddleware,
-    response_callback=content_negotiated_response
+    response_handler=content_negotiated_response
 )
 ```
 
@@ -201,7 +201,7 @@ async def template_maintenance_page(request: Request) -> Response:
 
 app.add_middleware(
     MaintenanceModeMiddleware,
-    response_callback=template_maintenance_page
+    response_handler=template_maintenance_page
 )
 ```
 
@@ -256,6 +256,6 @@ async def path_aware_response(request: Request) -> JSONResponse:
 
 app.add_middleware(
     MaintenanceModeMiddleware,
-    response_callback=path_aware_response
+    response_handler=path_aware_response
 )
 ```
