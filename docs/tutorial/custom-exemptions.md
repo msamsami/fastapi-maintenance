@@ -2,6 +2,13 @@
 
 While decorators provide a simple way to exempt specific routes from maintenance mode, more complex scenarios often require custom exemption logic. The `exempt_handler` parameter of the middleware allows you to implement custom rules that can consider any aspect of the incoming request.
 
+<details open>
+<summary>Note</summary>
+
+By default, FastAPI's built-in documentation endpoints (<code>/docs</code>, <code>/redoc</code>, <code>/openapi.json</code>, <code>/docs/oauth2-redirect</code>) are automatically exempted from maintenance mode to keep API documentation accessible. This built-in behavior works alongside any custom exemption handler you define.
+
+</details>
+
 ## Basic Usage
 
 Here's a simple example that exempts health check endpoints and requests with an admin key from maintenance mode:
@@ -26,6 +33,12 @@ app.add_middleware(
     MaintenanceModeMiddleware,
     exempt_handler=is_exempt
 )
+
+# Result during maintenance:
+# ✅ /docs, /redoc, /openapi.json, /docs/oauth2-redirect (automatically exempt)
+# ✅ /health/* (custom exemption)
+# ✅ Requests with X-Admin-Key header (custom exemption)
+# ❌ Other endpoints return 503
 ```
 
 ## Handler Function Requirements
