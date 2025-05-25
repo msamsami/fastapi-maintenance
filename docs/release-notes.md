@@ -2,8 +2,13 @@
 
 ## Latest Changes
 
+### Fixes
+
+- Fix bug where FastAPI documentation endpoints become inaccessible during maintenance mode. PR [#10](https://github.com/msamsami/fastapi-maintenance/pull/10) by [@msamsami](https://github.com/msamsami).
+
 ### Docs
 
+- Fix incorrect references to "callback" instead of "handler" in docs. PR [#8](https://github.com/msamsami/fastapi-maintenance/pull/8) by [@Attakay78](https://github.com/Attakay78).
 - Fix pull request URL in release notes. PR [#7](https://github.com/msamsami/fastapi-maintenance/pull/7) by [@msamsami](https://github.com/msamsami).
 - Improve documentation with clearer examples, expanded tutorials, and better organization. PR [#3](https://github.com/msamsami/fastapi-maintenance/pull/3) by [@msamsami](https://github.com/msamsami).
 
