@@ -299,7 +299,10 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
         return {"status": "off_path_param", "item_id": item_id}
 
     # Add the middleware properly
-    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+    file_path = str(tmp_path / "maintenance.txt")
+    configure_backend("file", file_path=file_path)
+    await set_maintenance_mode(True)
+    app.add_middleware(MaintenanceModeMiddleware)
 
     # Test the behavior of the middleware on different paths through HTTP requests
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -324,6 +327,14 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
         # Path similar to p4 but incorrect structure - should be in maintenance
         response_p4_wrong = await client.get("/p4/off")
         assert response_p4_wrong.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+    # Test with maintenance off first to cover the endpoint without decorator
+    await set_maintenance_mode(False)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # This path has no decorator - should be accessible
+        response_p3_off = await client.get("/p3/regular")
+        assert response_p3_off.status_code == status.HTTP_200_OK
+        assert response_p3_off.json() == {"status": "regular_path"}
 
 
 @pytest.mark.anyio
@@ -491,3 +502,141 @@ async def test_context_on_uses_middleware_backend_implicitly(
         assert not await middleware_backend.get_value()
         assert not await other_backend.get_value()  # Still OFF
         assert (await client.get("/regular")).status_code == status.HTTP_200_OK
+
+
+@pytest.mark.anyio
+async def test_docs_endpoints_automatically_exempted():
+    """Test that FastAPI's documentation endpoints are automatically exempted by default."""
+    app = FastAPI()
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    # Add middleware - docs should be exempt by default
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Regular API endpoint should be blocked
+        response = await client.get("/api/users")
+        assert response.status_code == 503
+
+        # Documentation endpoints should be automatically accessible
+        docs_response = await client.get("/docs")
+        assert docs_response.status_code == 200
+        assert "Swagger UI" in docs_response.text
+
+        redoc_response = await client.get("/redoc")
+        assert redoc_response.status_code == 200
+        assert "ReDoc" in redoc_response.text
+
+        openapi_response = await client.get("/openapi.json")
+        assert openapi_response.status_code == 200
+        assert openapi_response.headers["content-type"] == "application/json"
+
+        oauth_response = await client.get("/docs/oauth2-redirect")
+        assert oauth_response.status_code == 200
+        assert "OAuth2 Redirect" in oauth_response.text
+
+
+@pytest.mark.anyio
+async def test_custom_exempt_handler_works_with_built_in_exemptions():
+    """Test that custom exempt handlers work alongside built-in docs exemptions."""
+    app = FastAPI()
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy"}  # pragma: no cover
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    def custom_exempt_handler(request: Request) -> bool:
+        """Custom handler that exempts health endpoints."""
+        return request.url.path == "/health"
+
+    # Use custom exemption handler alongside built-in docs exemption
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True, exempt_handler=custom_exempt_handler)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Regular API endpoint should be blocked
+        response = await client.get("/api/users")
+        assert response.status_code == 503
+
+        # Health endpoint should be accessible (custom exemption)
+        health_response = await client.get("/health")
+        assert health_response.status_code == 200
+        assert health_response.json() == {"status": "healthy"}
+
+        # Documentation endpoints should still be accessible (built-in exemption)
+        docs_response = await client.get("/docs")
+        assert docs_response.status_code == 200
+        assert "Swagger UI" in docs_response.text
+
+
+@pytest.mark.anyio
+async def test_async_exempt_handler_works_with_built_in_exemptions():
+    """Test that async custom exempt handlers work alongside built-in docs exemptions."""
+    app = FastAPI()
+
+    @app.get("/admin/status")
+    async def admin_status():
+        return {"admin": "ok"}
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    async def async_exempt_handler(request: Request) -> bool:
+        """Async handler that exempts admin endpoints."""
+        # Simulate async operation
+        await asyncio.sleep(0.001)
+        return request.url.path.startswith("/admin/")
+
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True, exempt_handler=async_exempt_handler)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Regular API endpoint should be blocked
+        response = await client.get("/api/users")
+        assert response.status_code == 503
+
+        # Admin endpoint should be accessible (async custom exemption)
+        admin_response = await client.get("/admin/status")
+        assert admin_response.status_code == 200
+        assert admin_response.json() == {"admin": "ok"}
+
+        # Documentation endpoints should still be accessible (built-in exemption)
+        docs_response = await client.get("/docs")
+        assert docs_response.status_code == 200
+        assert "Swagger UI" in docs_response.text
+
+
+@pytest.mark.anyio
+async def test_no_custom_exempt_handler_only_docs_exempted():
+    """Test that when no custom exempt handler is provided, only docs are exempted."""
+    app = FastAPI()
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy"}  # pragma: no cover
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    # No custom exempt handler - only built-in docs exemption
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Regular endpoints should be blocked
+        response = await client.get("/api/users")
+        assert response.status_code == 503
+
+        health_response = await client.get("/health")
+        assert health_response.status_code == 503
+
+        # Only documentation endpoints should be accessible
+        docs_response = await client.get("/docs")
+        assert docs_response.status_code == 200
+        assert "Swagger UI" in docs_response.text
