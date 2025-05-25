@@ -111,19 +111,26 @@ select = [
     "I",  # isort
     "B",  # flake8-bugbear
     "C4",  # flake8-comprehensions
+    # Compatibility with ruff formatter
+    "E501",
+    "ISC001",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "W191",
 ]
 ignore = [
     "E501",  # line too long, handled by black
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
-    "W191",  # indentation contains tabs
 ]
 
 [tool.isort]
 atomic = true
 profile = "black"
 skip_gitignore = true
-known_first_party = ["black", "blib2to3", "blackd", "_black_version"]
+known_first_party = ["fastapi_maintenance"]
 
 [tool.uv]
 default-groups = ["dev", "docs"]

@@ -30,6 +30,7 @@ from ._constants import (
 )
 from ._context import is_maintenance_override_ctx_active
 from ._core import get_maintenance_mode, register_middleware_backend
+from ._handlers import exempt_docs_endpoints
 from .backends import BaseStateBackend
 
 P = ParamSpec("P")
@@ -158,6 +159,11 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         Returns:
             True if the request is exempt, False otherwise.
         """
+        # Built-in exemption: FastAPI documentation endpoints are always exempt
+        if exempt_docs_endpoints(request):
+            return True
+
+        # Custom exemption handler
         if self.exempt_handler is not None:
             if asyncio.iscoroutinefunction(self.exempt_handler):
                 if await self.exempt_handler(request):
