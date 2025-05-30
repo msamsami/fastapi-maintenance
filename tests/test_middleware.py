@@ -287,7 +287,7 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
     @app.get("/p2/on")
     @force_maintenance_mode_on
     async def p2_on():
-        return {"status": "on_path"}
+        return {"status": "on_path"}  # pragma: no cover
 
     @app.get("/p3/regular")
     async def p3_reg():
@@ -324,9 +324,9 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
         assert response_p4.status_code == status.HTTP_200_OK
         assert response_p4.json() == {"status": "off_path_param", "item_id": "test_id"}
 
-        # Path similar to p4 but incorrect structure - should be in maintenance
+        # Path similar to p4 but incorrect structure - should return 404 not found error
         response_p4_wrong = await client.get("/p4/off")
-        assert response_p4_wrong.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+        assert response_p4_wrong.status_code == status.HTTP_404_NOT_FOUND
 
     # Test with maintenance off first to cover the endpoint without decorator
     await set_maintenance_mode(False)
@@ -640,3 +640,452 @@ async def test_no_custom_exempt_handler_only_docs_exempted():
         docs_response = await client.get("/docs")
         assert docs_response.status_code == 200
         assert "Swagger UI" in docs_response.text
+
+
+@pytest.mark.anyio
+async def test_http_errors_exempt_from_maintenance():
+    """Test that HTTP error responses (404, 405, etc.) are exempted from maintenance mode."""
+    app = FastAPI()
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    @app.post("/api/users")
+    async def create_user():
+        return {"message": "User created"}  # pragma: no cover
+
+    @app.get("/api/users/{user_id}")
+    async def get_user(user_id: str):
+        return {"user_id": user_id}  # pragma: no cover
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy"}  # pragma: no cover
+
+    # Add middleware with maintenance enabled
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Existing endpoints should return maintenance response
+        response = await client.get("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.post("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.get("/api/users/123")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.get("/health")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # 404 Cases: Non-existent paths should return 404, not maintenance
+        response = await client.get("/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Not Found"}
+
+        response = await client.get("/api/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Not Found"}
+
+        response = await client.get("/completely/random/path")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Not Found"}
+
+        # 405 Cases: Non-existent methods on existing paths should return 405, not maintenance
+        response = await client.put("/api/users")
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.delete("/api/users/123")
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.patch("/health")
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        # Additional HTTP methods that don't exist
+        response = await client.options("/api/users")
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+@pytest.mark.anyio
+async def test_method_not_allowed_exempt_from_maintenance():
+    """Test comprehensive 405 Method Not Allowed cases that should be exempted from maintenance."""
+    app = FastAPI()
+
+    @app.get("/api/resource")
+    async def get_resource():
+        return {"data": "resource"}  # pragma: no cover
+
+    @app.post("/api/resource")
+    async def create_resource():
+        return {"message": "created"}  # pragma: no cover
+
+    @app.get("/api/items/{item_id}")
+    async def get_item(item_id: str):
+        return {"item_id": item_id}  # pragma: no cover
+
+    @app.put("/api/items/{item_id}")
+    async def update_item(item_id: str):
+        return {"item_id": item_id, "updated": True}  # pragma: no cover
+
+    # Add middleware with maintenance enabled
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Existing endpoints should return maintenance response
+        response = await client.get("/api/resource")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.post("/api/resource")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.get("/api/items/123")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.put("/api/items/123")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # 405 Cases: Methods that don't exist on existing paths
+        response = await client.put("/api/resource")  # Only GET/POST exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.delete("/api/resource")  # Only GET/POST exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.patch("/api/resource")  # Only GET/POST exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.post("/api/items/123")  # Only GET/PUT exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.delete("/api/items/123")  # Only GET/PUT exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        # HEAD method (should also return 405 for paths that don't support it)
+        response = await client.head("/api/items/123")
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+@pytest.mark.anyio
+async def test_http_errors_with_path_parameters():
+    """Test that HTTP errors (404, 405) with path parameters are exempted from maintenance."""
+    app = FastAPI()
+
+    @app.get("/api/users/{user_id}")
+    async def get_user(user_id: str):
+        return {"user_id": user_id}  # pragma: no cover
+
+    @app.get("/api/users/{user_id}/posts/{post_id}")
+    async def get_user_post(user_id: str, post_id: str):
+        return {"user_id": user_id, "post_id": post_id}  # pragma: no cover
+
+    # Add middleware with maintenance enabled
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Existing parameterized endpoints should return maintenance response
+        response = await client.get("/api/users/123")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.get("/api/users/123/posts/456")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # 404 Cases: Paths that don't match parameter patterns
+        response = await client.get("/api/users")  # Missing required parameter
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        response = await client.get("/api/users/123/posts")  # Missing required parameter
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        response = await client.get("/api/users/123/comments/456")  # Different resource
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        # 405 Cases: Correct paths but wrong methods
+        response = await client.post("/api/users/123")  # Only GET exists
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.put("/api/users/123/posts/456")  # Only GET exists
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.delete("/api/users/123")  # Only GET exists
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+@pytest.mark.anyio
+async def test_http_errors_with_custom_exempt_handler():
+    """Test that HTTP errors (404, 405) are exempted even when custom exempt handler is present."""
+    app = FastAPI()
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    @app.post("/api/users")
+    async def create_users():
+        return {"message": "User created"}  # pragma: no cover
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy"}
+
+    def custom_exempt_handler(request: Request) -> bool:
+        """Custom handler that exempts health endpoints."""
+        return request.url.path == "/health"
+
+    # Add middleware with maintenance enabled and custom exempt handler
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True, exempt_handler=custom_exempt_handler)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Existing endpoint not exempted by custom handler should return maintenance
+        response = await client.get("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.post("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # Existing endpoint exempted by custom handler should work normally
+        response = await client.get("/health")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"status": "healthy"}
+
+        # 404 Cases: Non-existent paths should return 404, not maintenance
+        response = await client.get("/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Not Found"}
+
+        # Non-existent path that would match custom exempt handler pattern should still return 404
+        response = await client.get("/health/status")  # Similar to /health but doesn't exist
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        # 405 Cases: Wrong methods should return 405, not maintenance
+        response = await client.put("/api/users")  # Only GET/POST exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.delete("/health")  # Only GET exists
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.patch("/api/users")  # Only GET/POST exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+@pytest.mark.anyio
+async def test_http_errors_with_forced_decorators():
+    """Test that HTTP errors (404, 405) are exempted even when forced decorators are used on other endpoints."""
+    app = FastAPI()
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}
+
+    @app.post("/api/users")
+    async def create_users():
+        return {"message": "User created"}
+
+    @app.get("/health")
+    @force_maintenance_mode_off
+    async def health():
+        return {"status": "healthy"}
+
+    @app.get("/admin/maintenance")
+    @force_maintenance_mode_on
+    async def admin_maintenance():
+        return {"message": "Should not be seen"}  # pragma: no cover
+
+    # Add middleware with maintenance disabled (but forced decorators should override)
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=False)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Regular endpoints should work (maintenance disabled)
+        response = await client.get("/api/users")
+        assert response.status_code == status.HTTP_200_OK
+
+        response = await client.post("/api/users")
+        assert response.status_code == status.HTTP_200_OK
+
+        # Forced off endpoint should work
+        response = await client.get("/health")
+        assert response.status_code == status.HTTP_200_OK
+
+        # Forced on endpoint should return maintenance
+        response = await client.get("/admin/maintenance")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # 404 Cases: Non-existent paths should return 404
+        response = await client.get("/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        response = await client.get("/admin/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        # 405 Cases: Wrong methods should return 405
+        response = await client.put("/api/users")  # Only GET/POST exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        response = await client.delete("/health")  # Only GET exists
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        # HTTP errors now take precedence over forced decorators (correct behavior)
+        response = await client.post("/admin/maintenance")  # Only GET exists, returns 405 even though path is forced ON
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+@pytest.mark.anyio
+async def test_http_error_behavior_consistency():
+    """Test that HTTP error behavior (404, 405) is consistent between maintenance on/off states."""
+    app = FastAPI()
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    @app.post("/api/users")
+    async def create_users():
+        return {"message": "User created"}  # pragma: no cover
+
+    # Test with maintenance OFF first
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=False)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Existing endpoints should work
+        response = await client.get("/api/users")
+        assert response.status_code == status.HTTP_200_OK
+
+        response = await client.post("/api/users")
+        assert response.status_code == status.HTTP_200_OK
+
+        # HTTP errors when maintenance is OFF
+        response_404_off = await client.get("/nonexistent")
+        assert response_404_off.status_code == status.HTTP_404_NOT_FOUND
+        assert response_404_off.json() == {"detail": "Not Found"}
+
+        response_405_off = await client.put("/api/users")
+        assert response_405_off.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+    # Now test with maintenance ON
+    app = FastAPI()
+
+    @app.get("/api/users")
+    async def get_users_maintenance_on():
+        return {"users": ["user1", "user2"]}  # pragma: no cover
+
+    @app.post("/api/users")
+    async def create_users_maintenance_on():
+        return {"message": "User created"}  # pragma: no cover
+
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Existing endpoints should return maintenance
+        response = await client.get("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.post("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # HTTP errors when maintenance is ON should be identical to when OFF
+        response_404_on = await client.get("/nonexistent")
+        assert response_404_on.status_code == status.HTTP_404_NOT_FOUND
+        assert response_404_on.json() == {"detail": "Not Found"}
+
+        response_405_on = await client.put("/api/users")
+        assert response_405_on.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        # The error responses should be identical regardless of maintenance state
+        assert response_404_off.json() == response_404_on.json()
+        assert response_404_off.status_code == response_404_on.status_code
+        assert response_405_off.status_code == response_405_on.status_code
+
+
+@pytest.mark.anyio
+async def test_docs_endpoints_still_exempted_with_http_error_logic():
+    """Test that docs endpoints are still exempted even with the HTTP error exemption logic."""
+    app = FastAPI()
+
+    @app.get("/api/users")
+    async def get_users():
+        return {"users": ["user1", "user2"]}
+
+    @app.post("/api/users")
+    async def create_users():
+        return {"message": "User created"}
+
+    # Add middleware with maintenance enabled
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Regular endpoints should return maintenance
+        response = await client.get("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.post("/api/users")
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # Docs endpoints should still be accessible (built-in exemption takes precedence)
+        docs_response = await client.get("/docs")
+        assert docs_response.status_code == status.HTTP_200_OK
+        assert "Swagger UI" in docs_response.text
+
+        redoc_response = await client.get("/redoc")
+        assert redoc_response.status_code == status.HTTP_200_OK
+        assert "ReDoc" in redoc_response.text
+
+        openapi_response = await client.get("/openapi.json")
+        assert openapi_response.status_code == status.HTTP_200_OK
+
+        oauth_response = await client.get("/docs/oauth2-redirect")
+        assert oauth_response.status_code == status.HTTP_200_OK
+
+        # HTTP errors should still be exempted
+        response = await client.get("/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Not Found"}
+
+        response = await client.put("/api/users")  # Only GET/POST exist
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+@pytest.mark.anyio
+async def test_http_errors_take_precedence_over_forced_decorators():
+    """Test that HTTP errors (404, 405) take precedence over forced maintenance decorators.
+
+    This test demonstrates the new precedence behavior where HTTP errors are checked first,
+    before any forced maintenance decorators are considered.
+    """
+    app = FastAPI()
+
+    @app.get("/api/forced-on")
+    @force_maintenance_mode_on
+    async def forced_on_endpoint():
+        return {"message": "This endpoint is forced ON"}  # pragma: no cover
+
+    @app.get("/api/forced-off")
+    @force_maintenance_mode_off
+    async def forced_off_endpoint():
+        return {"message": "This endpoint is forced OFF"}
+
+    # Add middleware with general maintenance enabled
+    app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Existing endpoints behave according to their decorators
+        response = await client.get("/api/forced-on")  # Forced ON
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        response = await client.get("/api/forced-off")  # Forced OFF
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"message": "This endpoint is forced OFF"}
+
+        # HTTP errors take precedence over forced decorators
+        # Non-existent path returns 404, not maintenance
+        response = await client.get("/api/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Not Found"}
+
+        # Wrong method on forced ON path returns 405, not maintenance
+        response = await client.post("/api/forced-on")  # Only GET exists
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+        # Wrong method on forced OFF path also returns 405
+        response = await client.post("/api/forced-off")  # Only GET exists
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
