@@ -3,9 +3,16 @@
 While decorators provide a simple way to exempt specific routes from maintenance mode, more complex scenarios often require custom exemption logic. The `exempt_handler` parameter of the middleware allows you to implement custom rules that can consider any aspect of the incoming request.
 
 <details open>
-<summary>Note</summary>
+<summary>Docs Bypass Maintenance</summary>
 
 By default, FastAPI's built-in documentation endpoints (<code>/docs</code>, <code>/redoc</code>, <code>/openapi.json</code>, <code>/docs/oauth2-redirect</code>) are automatically exempted from maintenance mode to keep API documentation accessible. This built-in behavior works alongside any custom exemption handler you define.
+
+</details>
+
+<details open>
+<summary>HTTP Error Behavior</summary>
+
+The middleware automatically exempts requests that would result in HTTP errors (404 Not Found, 405 Method Not Allowed, etc.) from maintenance mode. This ensures that when clients make requests to non-existent paths or use wrong HTTP methods, they receive the proper error response instead of a maintenance response.
 
 </details>
 
