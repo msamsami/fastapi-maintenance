@@ -2,8 +2,11 @@
 
 ## Latest Changes
 
+## 0.0.3
+
 ### Fixes
 
+- Fix bug where non-existent routes return maintenance response instead of correct HTTP error. PR [#11](https://github.com/msamsami/fastapi-maintenance/pull/11) by [@msamsami](https://github.com/msamsami).
 - Fix bug where FastAPI documentation endpoints become inaccessible during maintenance mode. PR [#10](https://github.com/msamsami/fastapi-maintenance/pull/10) by [@msamsami](https://github.com/msamsami).
 
 ### Docs
