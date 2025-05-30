@@ -30,7 +30,7 @@ from ._constants import (
 )
 from ._context import is_maintenance_override_ctx_active
 from ._core import get_maintenance_mode, register_middleware_backend
-from ._handlers import exempt_docs_endpoints
+from ._handlers import exempt_docs_endpoints, exempt_nonexistent_routes
 from .backends import BaseStateBackend
 
 P = ParamSpec("P")
@@ -84,9 +84,13 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
             self._collect_forced_maintenance_paths(request.app.routes)
             self._forced_paths_collected = True
 
+        # Built-in exemption: Non-existent paths/methods should return normal HTTP errors, not maintenance
+        if exempt_nonexistent_routes(request):
+            return await call_next(request)
+
         # 1. Highest Precedence Block: Path is explicitly forced into maintenance
         if self._is_path_forced_on(request):
-            # Path forced ON implies maintenance regardless of exemptions or other settings
+            # Path forced ON implies maintenance regardless of other settings
             return await self._get_maintenance_response(request)
 
         # 2. Highest Precedence Allow: Path is explicitly forced out of maintenance
@@ -94,7 +98,7 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
             # Path forced OFF implies proceeding, bypassing other maintenance checks for this path
             return await call_next(request)
 
-        # 3. Request-Specific Exemption: The request itself is exempt from maintenance
+        # 3. Request-Specific Exemption: The request itself is exempt from maintenance (docs, custom handlers)
         if await self._is_exempt(request):
             # Exempt requests proceed unless the path was specifically forced ON (checked above)
             return await call_next(request)
