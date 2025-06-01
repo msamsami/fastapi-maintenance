@@ -2,6 +2,10 @@
 
 ## Latest Changes
 
+### Internal
+
+- Remove Dependabot configuration (`dependabot.yml`) as it doesn't fully support `uv`. PR [#12](https://github.com/msamsami/fastapi-maintenance/pull/12) by [@msamsami](https://github.com/msamsami).
+
 ## 0.0.3
 
 ### Fixes
