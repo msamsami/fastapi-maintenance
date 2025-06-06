@@ -6,7 +6,7 @@ First, make sure you create a virtual environment and activate it.
 
 ## Methods
 
-### Using pip (recommended)
+### Using pip
 
 ```bash
 pip install fastapi-maintenance
