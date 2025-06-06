@@ -2,6 +2,10 @@
 
 ## Latest Changes
 
+### Docs
+
+- Add experimental status warning and improve features section presentation. PR [#14](https://github.com/msamsami/fastapi-maintenance/pull/14) by [@msamsami](https://github.com/msamsami).
+
 ### Internal
 
 - Remove Dependabot configuration (`dependabot.yml`) as it doesn't fully support `uv`. PR [#12](https://github.com/msamsami/fastapi-maintenance/pull/12) by [@msamsami](https://github.com/msamsami).
