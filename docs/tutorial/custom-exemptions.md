@@ -12,7 +12,7 @@ By default, FastAPI's built-in documentation endpoints (<code>/docs</code>, <cod
 <details open>
 <summary>HTTP Error Behavior</summary>
 
-The middleware automatically exempts requests that would result in HTTP errors (e.g., 404 Not Found, 405 Method Not Allowed, etc.) from maintenance mode. This ensures that when clients make requests to non-existent paths or use wrong HTTP methods, they receive the proper error response instead of a maintenance response.
+The middleware automatically exempts requests that would result in HTTP errors (e.g., <code>404 Not Found</code>, <code>405 Method Not Allowed</code>, etc.) from maintenance mode. This ensures that when clients make requests to non-existent paths or use wrong HTTP methods, they receive the proper error response instead of a maintenance response.
 
 </details>
 

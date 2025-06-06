@@ -37,14 +37,17 @@
 
 The package provides a simple yet powerful solution to temporarily disable your API endpoints during **application maintenance states**. It ensures a smooth experience for API consumers through customizable responses and fine-grained control over which routes remain accessible. The package is designed to be easy to integrate, highly customizable, and extensible to fit various use cases.
 
-The key features are:
+> [!WARNING]
+> FastAPI Maintenance is currently in experimental status. Although it's actively developed and tested, the API may undergo changes between releases. Be cautious when upgrading in production environments and always review the changelog carefully.
 
-- **Simple to use**: Add just a few lines of code to enable maintenance mode.
-- **Pluggable storage backends**: Choose between environment variables, local files, or create your own.
-- **Per-route control**: Force maintenance mode on/off for specific routes.
-- **Customizable responses**: Define your own maintenance page or custom JSON responses.
-- **Context manager**: Temporarily enable maintenance mode for specific operations.
-- **Extensible**: Easy to extend with custom backends and handlers.
+## Features
+
+- ⚙️ **Simple to use**: Add just a few lines of code to enable maintenance mode.
+- 🔌 **Flexible state management**: Manage maintenance mode via environment variables, local files, or create your own custom backend.
+- 🚦 **Per-route control**: Force maintenance mode ON/OFF for specific routes.
+- 🎨 **Customizable responses**: Define your own maintenance page or custom JSON responses.
+- ⏱️ **Context manager**: Temporarily enable maintenance mode for critical operations.
+- 🧩 **Extensible**: Easy to extend with custom backends, handlers, and exemptions.
 
 ## Install
 
