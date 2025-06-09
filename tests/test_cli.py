@@ -12,6 +12,7 @@ from typer.testing import CliRunner
 
 from fastapi_maintenance._constants import MAINTENANCE_MODE_ENV_VAR_NAME
 from fastapi_maintenance.cli import app, main, status, version_callback
+from fastapi_maintenance import __version__
 
 
 @pytest.fixture
@@ -59,7 +60,7 @@ def test_main_function_with_version_flag(cli_runner: CliRunner):
     assert result.exit_code == 0
     assert "fastapi-maintenance" in result.output
     # Should contain version number
-    assert "0.0.3" in result.output or any(char.isdigit() for char in result.output)
+    assert __version__ in result.output or any(char.isdigit() for char in result.output)
 
 
 def test_main_function_help(cli_runner: CliRunner):

@@ -2,6 +2,8 @@
 
 ## Latest Changes
 
+## 0.0.4
+
 ### Docs
 
 - 📝 Add docs for package CLI. PR [#17](https://github.com/msamsami/fastapi-maintenance/pull/17) by [@msamsami](https://github.com/msamsami).
