@@ -36,6 +36,15 @@ dependencies = [
     "typing-extensions>=4.8.0 ; python_full_version < '3.10'",
 ]
 
+[project.optional-dependencies]
+cli = [
+    "rich>=14.0.0",
+    "typer>=0.16.0",
+]
+
+[project.scripts]
+fastapi-maintenance = "fastapi_maintenance.cli:app"
+
 [dependency-groups]
 dev = [
     "coverage>=7.6.1",
@@ -84,6 +93,9 @@ dynamic_context = "test_function"
 show_missing = true
 sort = "-Cover"
 omit = []
+exclude_also = [
+    "if __name__ == .__main__.:",
+]
 
 [tool.coverage.html]
 show_contexts = true
@@ -124,6 +136,7 @@ ignore = [
     "E501",  # line too long, handled by black
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
+    "B904",  # raise exceptions with 'raise ... from err' within an `except` clause
 ]
 
 [tool.isort]
