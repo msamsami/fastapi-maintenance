@@ -22,5 +22,6 @@ By the end of this tutorial, you'll understand how to:
 - Implement advanced patterns like content negotiation and template-based responses
 - Integrate maintenance mode with other middleware and application lifecycle events
 - Follow best practices for API availability management during maintenance
+- Use the command line interface (CLI) to manage maintenance mode
 
 Let's begin with the [installation guide](./install.md).

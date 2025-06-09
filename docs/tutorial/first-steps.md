@@ -91,6 +91,7 @@ While the basic setup is easy, FastAPI Maintenance offers many more features:
 - Understanding [middleware precedence](./middleware-precedence.md) rules
 - Implementing [custom exemptions](./custom-exemptions.md) for specific requests
 - Creating [custom responses](./custom-responses.md) during maintenance
+- Using [command line interface (CLI)](./cli.md) for managing maintenance mode
 - Exploring [advanced usage](./advanced-usage.md) patterns
 
 In the next sections, we'll explore each of these features in detail.

@@ -28,6 +28,14 @@ For the latest development version, you can install directly from the GitHub rep
 pip install git+https://github.com/msamsami/fastapi-maintenance.git
 ```
 
+## Optional Dependencies
+
+If you want to use the command-line interface (CLI), install with the `cli` extra:
+
+```bash
+pip install fastapi-maintenance[cli]
+```
+
 ## Verifying Installation
 
 You can verify the installation by checking the version in Python:
@@ -35,6 +43,12 @@ You can verify the installation by checking the version in Python:
 ```python
 import fastapi_maintenance
 print(fastapi_maintenance.__version__)  # Should print the installed version
+```
+
+or using the command line if you've installed the CLI extra:
+
+```bash
+fastapi-maintenance --version
 ```
 
 ## Next Steps
