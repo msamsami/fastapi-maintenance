@@ -81,7 +81,7 @@ def test_status_command_help(cli_runner: CliRunner):
     """Test the status command help output."""
     result = cli_runner.invoke(app, ["status", "--help"])
     assert result.exit_code == 0
-    assert "📊 Check the current maintenance mode status" in result.output
+    assert "Check the current maintenance mode status" in result.output
     assert "--backend" in result.output
     assert "--var-name" in result.output
     assert "--file-path" in result.output
@@ -97,7 +97,7 @@ def test_status_command_default_backend_off(mock_get_maintenance, mock_anyio_run
     result = cli_runner.invoke(app, ["status"])
 
     assert result.exit_code == 0
-    assert "🟢 Maintenance mode is OFF" in result.output
+    assert "Maintenance mode is OFF" in result.output
     assert "(using default backend)" in result.output
     mock_anyio_run.assert_called_once()
 
@@ -112,7 +112,7 @@ def test_status_command_default_backend_on(mock_get_maintenance, mock_anyio_run,
     result = cli_runner.invoke(app, ["status"])
 
     assert result.exit_code == 0
-    assert "🔴 Maintenance mode is ON" in result.output
+    assert "Maintenance mode is ON" in result.output
     assert "(using default backend)" in result.output
     mock_anyio_run.assert_called_once()
 
@@ -132,7 +132,7 @@ def test_status_command_env_backend_default_var(
     result = cli_runner.invoke(app, ["status", "--backend", "env"])
 
     assert result.exit_code == 0
-    assert "🟢 Maintenance mode is OFF" in result.output
+    assert "Maintenance mode is OFF" in result.output
     assert f"(env: {MAINTENANCE_MODE_ENV_VAR_NAME})" in result.output
     mock_get_backend.assert_called_once_with("env", var_name=MAINTENANCE_MODE_ENV_VAR_NAME)
     mock_anyio_run.assert_called_once_with(mock_get_maintenance, mock_backend)
@@ -154,7 +154,7 @@ def test_status_command_env_backend_custom_var(
     result = cli_runner.invoke(app, ["status", "--backend", "env", "--var-name", custom_var])
 
     assert result.exit_code == 0
-    assert "🔴 Maintenance mode is ON" in result.output
+    assert "Maintenance mode is ON" in result.output
     assert f"(env: {custom_var})" in result.output
     mock_get_backend.assert_called_once_with("env", var_name=custom_var)
     mock_anyio_run.assert_called_once_with(mock_get_maintenance, mock_backend)
@@ -186,7 +186,7 @@ def test_status_command_file_backend_missing_path(cli_runner: CliRunner):
     result = cli_runner.invoke(app, ["status", "--backend", "file"])
 
     assert result.exit_code == 1
-    assert "❌ ERROR: --file-path is required when --backend is 'file'" in result.output
+    assert "ERROR: --file-path is required when --backend is 'file'" in result.output
 
 
 def test_status_command_unsupported_backend(cli_runner: CliRunner):
@@ -194,7 +194,7 @@ def test_status_command_unsupported_backend(cli_runner: CliRunner):
     result = cli_runner.invoke(app, ["status", "--backend", "invalid"])
 
     assert result.exit_code == 1
-    assert "❌ ERROR: Unsupported backend: invalid. Use 'env' or 'file'." in result.output
+    assert "ERROR: Unsupported backend: invalid. Use 'env' or 'file'." in result.output
 
 
 @patch("fastapi_maintenance.cli.anyio.run")
@@ -205,7 +205,7 @@ def test_status_command_keyboard_interrupt(mock_anyio_run, cli_runner: CliRunner
     result = cli_runner.invoke(app, ["status"])
 
     assert result.exit_code == 1
-    assert "⚠️  Operation cancelled by user" in result.output
+    assert "Operation cancelled by user" in result.output
 
 
 @patch("fastapi_maintenance.cli.anyio.run")
@@ -217,7 +217,7 @@ def test_status_command_generic_exception(mock_anyio_run, cli_runner: CliRunner)
     result = cli_runner.invoke(app, ["status"])
 
     assert result.exit_code == 1
-    assert f"❌ ERROR: {error_message}" in result.output
+    assert f"ERROR: {error_message}" in result.output
 
 
 @patch("fastapi_maintenance.cli.anyio.run")
@@ -235,7 +235,7 @@ def test_status_command_exception_with_backend(
     result = cli_runner.invoke(app, ["status", "--backend", "env"])
 
     assert result.exit_code == 1
-    assert f"❌ ERROR: {error_message}" in result.output
+    assert f"ERROR: {error_message}" in result.output
     mock_get_backend.assert_called_once_with("env", var_name=MAINTENANCE_MODE_ENV_VAR_NAME)
 
 
@@ -307,7 +307,7 @@ def test_status_env_backend_keyboard_interrupt(
     result = cli_runner.invoke(app, ["status", "--backend", "env"])
 
     assert result.exit_code == 1
-    assert "⚠️  Operation cancelled by user" in result.output
+    assert "Operation cancelled by user" in result.output
 
 
 def test_status_command_empty_var_name(cli_runner: CliRunner):
