@@ -74,6 +74,7 @@ nav:
     - Middleware Precedence: tutorial/middleware-precedence.md
     - Custom Exemptions: tutorial/custom-exemptions.md
     - Custom Responses: tutorial/custom-responses.md
+    - Command Line Interface: tutorial/cli.md
     - Advanced Usage: tutorial/advanced-usage.md
   - Resources:
     - Help: help.md
