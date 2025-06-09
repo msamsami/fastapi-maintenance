@@ -56,7 +56,7 @@ def app_with_middleware() -> FastAPI:
     app = FastAPI()
 
     @app.get("/regular")
-    async def regular_endpoint():  # pragma: no cover
+    async def regular_endpoint():
         return {"message": "Hello World"}
 
     @app.get("/exempt_by_decorator")
@@ -66,7 +66,7 @@ def app_with_middleware() -> FastAPI:
 
     @app.get("/forced_on_by_decorator")
     @force_maintenance_mode_on
-    async def forced_on_by_decorator_endpoint():  # pragma: no cover
+    async def forced_on_by_decorator_endpoint():
         return {"message": "Should not be called"}
 
     return app
@@ -287,7 +287,7 @@ async def test_middleware_path_regex_collection_on_init(tmp_path: SyncPath):
     @app.get("/p2/on")
     @force_maintenance_mode_on
     async def p2_on():
-        return {"status": "on_path"}  # pragma: no cover
+        return {"status": "on_path"}
 
     @app.get("/p3/regular")
     async def p3_reg():
@@ -351,7 +351,7 @@ async def test_middleware_force_on_takes_precedence_over_exempt_handler_and_forc
     @app_with_middleware.get("/complex_force_on")
     @force_maintenance_mode_on  # Then force on (top-most decorator wins in attribute setting)
     @force_maintenance_mode_off  # Attempt to force off
-    async def complex_force_on_endpoint():  # pragma: no cover
+    async def complex_force_on_endpoint():
         return {"message": "Complex force on - should not be seen"}
 
     def always_exempt_handler(request: Request) -> bool:
@@ -511,7 +511,7 @@ async def test_docs_endpoints_automatically_exempted():
 
     @app.get("/api/users")
     async def get_users():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     # Add middleware - docs should be exempt by default
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
@@ -546,11 +546,11 @@ async def test_custom_exempt_handler_works_with_built_in_exemptions():
 
     @app.get("/health")
     async def health():
-        return {"status": "healthy"}  # pragma: no cover
+        return {"status": "healthy"}
 
     @app.get("/api/users")
     async def get_users():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     def custom_exempt_handler(request: Request) -> bool:
         """Custom handler that exempts health endpoints."""
@@ -586,7 +586,7 @@ async def test_async_exempt_handler_works_with_built_in_exemptions():
 
     @app.get("/api/users")
     async def get_users():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     async def async_exempt_handler(request: Request) -> bool:
         """Async handler that exempts admin endpoints."""
@@ -619,11 +619,11 @@ async def test_no_custom_exempt_handler_only_docs_exempted():
 
     @app.get("/health")
     async def health():
-        return {"status": "healthy"}  # pragma: no cover
+        return {"status": "healthy"}
 
     @app.get("/api/users")
     async def get_users():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     # No custom exempt handler - only built-in docs exemption
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
@@ -649,19 +649,19 @@ async def test_http_errors_exempt_from_maintenance():
 
     @app.get("/api/users")
     async def get_users():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     @app.post("/api/users")
     async def create_user():
-        return {"message": "User created"}  # pragma: no cover
+        return {"message": "User created"}
 
     @app.get("/api/users/{user_id}")
     async def get_user(user_id: str):
-        return {"user_id": user_id}  # pragma: no cover
+        return {"user_id": user_id}
 
     @app.get("/health")
     async def health():
-        return {"status": "healthy"}  # pragma: no cover
+        return {"status": "healthy"}
 
     # Add middleware with maintenance enabled
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
@@ -715,19 +715,19 @@ async def test_method_not_allowed_exempt_from_maintenance():
 
     @app.get("/api/resource")
     async def get_resource():
-        return {"data": "resource"}  # pragma: no cover
+        return {"data": "resource"}
 
     @app.post("/api/resource")
     async def create_resource():
-        return {"message": "created"}  # pragma: no cover
+        return {"message": "created"}
 
     @app.get("/api/items/{item_id}")
     async def get_item(item_id: str):
-        return {"item_id": item_id}  # pragma: no cover
+        return {"item_id": item_id}
 
     @app.put("/api/items/{item_id}")
     async def update_item(item_id: str):
-        return {"item_id": item_id, "updated": True}  # pragma: no cover
+        return {"item_id": item_id, "updated": True}
 
     # Add middleware with maintenance enabled
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
@@ -774,11 +774,11 @@ async def test_http_errors_with_path_parameters():
 
     @app.get("/api/users/{user_id}")
     async def get_user(user_id: str):
-        return {"user_id": user_id}  # pragma: no cover
+        return {"user_id": user_id}
 
     @app.get("/api/users/{user_id}/posts/{post_id}")
     async def get_user_post(user_id: str, post_id: str):
-        return {"user_id": user_id, "post_id": post_id}  # pragma: no cover
+        return {"user_id": user_id, "post_id": post_id}
 
     # Add middleware with maintenance enabled
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
@@ -819,11 +819,11 @@ async def test_http_errors_with_custom_exempt_handler():
 
     @app.get("/api/users")
     async def get_users():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     @app.post("/api/users")
     async def create_users():
-        return {"message": "User created"}  # pragma: no cover
+        return {"message": "User created"}
 
     @app.get("/health")
     async def health():
@@ -890,7 +890,7 @@ async def test_http_errors_with_forced_decorators():
     @app.get("/admin/maintenance")
     @force_maintenance_mode_on
     async def admin_maintenance():
-        return {"message": "Should not be seen"}  # pragma: no cover
+        return {"message": "Should not be seen"}
 
     # Add middleware with maintenance disabled (but forced decorators should override)
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=False)
@@ -937,11 +937,11 @@ async def test_http_error_behavior_consistency():
 
     @app.get("/api/users")
     async def get_users():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     @app.post("/api/users")
     async def create_users():
-        return {"message": "User created"}  # pragma: no cover
+        return {"message": "User created"}
 
     # Test with maintenance OFF first
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=False)
@@ -967,11 +967,11 @@ async def test_http_error_behavior_consistency():
 
     @app.get("/api/users")
     async def get_users_maintenance_on():
-        return {"users": ["user1", "user2"]}  # pragma: no cover
+        return {"users": ["user1", "user2"]}
 
     @app.post("/api/users")
     async def create_users_maintenance_on():
-        return {"message": "User created"}  # pragma: no cover
+        return {"message": "User created"}
 
     app.add_middleware(MaintenanceModeMiddleware, enable_maintenance=True)
 
@@ -1057,7 +1057,7 @@ async def test_http_errors_take_precedence_over_forced_decorators():
     @app.get("/api/forced-on")
     @force_maintenance_mode_on
     async def forced_on_endpoint():
-        return {"message": "This endpoint is forced ON"}  # pragma: no cover
+        return {"message": "This endpoint is forced ON"}
 
     @app.get("/api/forced-off")
     @force_maintenance_mode_off

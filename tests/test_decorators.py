@@ -79,7 +79,7 @@ async def test_decorators_integration_with_middleware():
 
     @app.get("/forced_on")
     @force_maintenance_mode_on
-    async def get_forced_on():  # pragma: no cover (should not be reached if middleware works)
+    async def get_forced_on():
         return {"message": "Forced on - should not see this"}
 
     @app.get("/normal")
