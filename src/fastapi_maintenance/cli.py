@@ -104,7 +104,7 @@ def status(
         print(f"{status_icon} Maintenance mode is {status_text} {backend_text}")
 
     except KeyboardInterrupt:
-        err_console.print("\n⚠️  Operation cancelled by user")
+        err_console.print("\n⚠️ Operation cancelled by user")
         raise typer.Exit(1)
     except Exception as e:
         err_console.print(f"❌ [red]ERROR:[/red] {str(e)}")
