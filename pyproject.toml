@@ -83,8 +83,7 @@ filterwarnings = ["ignore"]
 parallel = true
 data_file = "coverage/.coverage"
 source = [
-    "tests",
-    "src/fastapi_maintenance"
+    "src/fastapi_maintenance",
 ]
 context = '${CONTEXT}'
 dynamic_context = "test_function"
@@ -92,9 +91,10 @@ dynamic_context = "test_function"
 [tool.coverage.report]
 show_missing = true
 sort = "-Cover"
-omit = []
 exclude_also = [
+    "pass",
     "if __name__ == .__main__.:",
+    "from typing import *",
 ]
 
 [tool.coverage.html]
