@@ -2,6 +2,10 @@
 
 ## Latest Changes
 
+### Internal
+
+- 🔧 Reformat pre-commit config file. PR [#18](https://github.com/msamsami/fastapi-maintenance/pull/18) by [@msamsami](https://github.com/msamsami).
+
 ## 0.0.4
 
 ### Docs
