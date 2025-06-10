@@ -8,10 +8,7 @@ from fastapi_maintenance import get_maintenance_mode, set_maintenance_mode
 from fastapi_maintenance._core import (
     _backend as core_backend,  # For inspecting internal state
 )
-from fastapi_maintenance._core import (
-    _get_default_backend,
-    configure_backend,
-)
+from fastapi_maintenance._core import _get_default_backend, configure_backend
 from fastapi_maintenance.backends import (
     MAINTENANCE_MODE_ENV_VAR_NAME,
     EnvVarBackend,

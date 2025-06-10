@@ -10,9 +10,9 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
+from fastapi_maintenance import __version__
 from fastapi_maintenance._constants import MAINTENANCE_MODE_ENV_VAR_NAME
 from fastapi_maintenance.cli import app, main, status, version_callback
-from fastapi_maintenance import __version__
 
 
 @pytest.fixture
