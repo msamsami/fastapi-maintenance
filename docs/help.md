@@ -26,10 +26,6 @@ When reporting bugs, please include:
 
 For questions, ideas, or general discussions about the package, use the [GitHub Discussions](https://github.com/msamsami/fastapi-maintenance/discussions) feature.
 
-## Contributing
-
-If you want to contribute to the project, please see the [Contributing](./contributing.md) guide.
-
 ## Support the Project
 
 There are several ways you can support the FastAPI Maintenance project:
@@ -46,7 +42,7 @@ Tell others about FastAPI Maintenance:
 - Share the project on social media
 - Mention it at conferences or meetups
 
-### Contribute Code or Documentation
+### Contributing
 
 Contributions are welcome! You can:
 
@@ -55,7 +51,7 @@ Contributions are welcome! You can:
 - Write examples or tutorials
 - Add tests
 
-See the [Contributing](./contributing.md) guide for more information.
+If you want to contribute to the project, please see the [Contributing](./contributing.md) guide for more information.
 
 ### Report Issues
 
