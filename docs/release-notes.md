@@ -2,6 +2,10 @@
 
 ## Latest Changes
 
+### Docs
+
+- 📝 Fix duplicate contributing section in Help page. PR [#19](https://github.com/msamsami/fastapi-maintenance/pull/19) by [@msamsami](https://github.com/msamsami).
+
 ### Internal
 
 - 🔧 Reformat pre-commit config file. PR [#18](https://github.com/msamsami/fastapi-maintenance/pull/18) by [@msamsami](https://github.com/msamsami).
