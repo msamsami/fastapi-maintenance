@@ -1,25 +1,33 @@
 # Contributing
 
+We welcome contributions from the community to help improve FastAPI Maintenance.
+
 First, you might want to see the basic ways to [help FastAPI Maintenance package and get help](help.md).
 
 ## Developing
 
 If you already cloned the <a href="https://github.com/msamsami/fastapi-maintenance" class="external-link" target="_blank">fastapi-maintenance repository</a> and you want to deep dive in the code, here are some guidelines to set up your environment.
 
-### Virtual Environment with `uv`
+### Install `uv`
 
-We use `uv` for Python package management. To set up your development environment:
+We use `uv` for Python dependency management. If you don't have `uv` installed, follow the instructions on the <a href="https://docs.astral.sh/uv/guides/install-python" class="external-link" target="_blank">official uv website</a>.
 
-```console
+Once `uv` is installed, navigate to the cloned repository.
+
+### Set up Virtual Environment
+
+To set up your development virtual environment with `uv`:
+
+```bash
 uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate
 ```
 
-### Install Development Dependencies
+### Install Dependencies
 
-After activating the environment, install the required development packages:
+After activating the environment, install the required package and development dependencies:
 
-```console
+```bash
 uv sync --all-extras --all-groups
 ```
 
@@ -29,17 +37,15 @@ This installs all the dependencies in your environment.
 
 There is a script that you can run that will format and clean all your code:
 
-```console
+```bash
 bash scripts/format.sh
 ```
-
-It will also auto-sort all your imports.
 
 ## Tests
 
 We use pytest for testing. To run the tests and generate coverage reports:
 
-```console
+```bash
 bash scripts/test.sh
 ```
 
@@ -53,7 +59,7 @@ First, make sure you set up your environment as described above, that will insta
 
 During local development, you can build the documentation site and check for any changes with live-reloading:
 
-```console
+```bash
 mkdocs serve
 ```
 
@@ -68,3 +74,29 @@ The documentation uses <a href="https://www.mkdocs.org/" class="external-link" t
 All the documentation is in Markdown format in the directory `./docs`.
 
 Many of the tutorials have blocks of code. In most cases, these blocks of code are actual complete applications that can be run as is.
+
+## Making Contributions
+
+### Coding Standards
+
+We try to maintain high code quality standards to ensure consistency across the project:
+
+- Follow PEP 8 guidelines.
+- Write meaningful tests for new features or bug fixes.
+
+### Creating a Pull Request
+
+After making your changes:
+
+- Push your changes to your fork.
+- Open a pull request with a clear description of your changes.
+- Update the documentation if necessary.
+
+### Code Reviews
+
+Your contributions will go through our review process:
+
+- Address any feedback from code reviews.
+- Once approved, your contributions will be merged into the main branch.
+
+Thank you for contributing to FastAPI Maintenance 🚀
