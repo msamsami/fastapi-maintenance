@@ -4,6 +4,7 @@
 
 ### Docs
 
+- 📝 Add sections for installing `uv` and making contributions to the Contributing page. PR [#20](https://github.com/msamsami/fastapi-maintenance/pull/20) by [@msamsami](https://github.com/msamsami).
 - 📝 Fix duplicate contributing section in Help page. PR [#19](https://github.com/msamsami/fastapi-maintenance/pull/19) by [@msamsami](https://github.com/msamsami).
 
 ### Internal
