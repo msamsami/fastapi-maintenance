@@ -2,14 +2,16 @@
 
 ## Latest Changes
 
+### Internal
+
+- 👷 Fix the order of running `coverage xml` command in the Coverage GitHub Action. PR [#22](https://github.com/msamsami/fastapi-maintenance/pull/22) by [@msamsami](https://github.com/msamsami).
+- 👷 Remove unnecessary steps and configurations from the Coverage GitHub Action. PR [#21](https://github.com/msamsami/fastapi-maintenance/pull/21) by [@msamsami](https://github.com/msamsami).
+- 🔧 Reformat pre-commit config file. PR [#18](https://github.com/msamsami/fastapi-maintenance/pull/18) by [@msamsami](https://github.com/msamsami).
+
 ### Docs
 
 - 📝 Add sections for installing `uv` and making contributions to the Contributing page. PR [#20](https://github.com/msamsami/fastapi-maintenance/pull/20) by [@msamsami](https://github.com/msamsami).
 - 📝 Fix duplicate contributing section in Help page. PR [#19](https://github.com/msamsami/fastapi-maintenance/pull/19) by [@msamsami](https://github.com/msamsami).
-
-### Internal
-
-- 🔧 Reformat pre-commit config file. PR [#18](https://github.com/msamsami/fastapi-maintenance/pull/18) by [@msamsami](https://github.com/msamsami).
 
 ## 0.0.4
 
