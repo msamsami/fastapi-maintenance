@@ -30,7 +30,9 @@ jobs:
       - run: mkdir coverage
 
       - name: Run tests with coverage
-        run: bash scripts/test.sh
+        run: |
+          bash scripts/test.sh
+          uv run coverage xml
         env:
           COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py
           CONTEXT: ${{ runner.os }}-py
@@ -41,8 +43,6 @@ jobs:
           name: coverage
           path: coverage
           include-hidden-files: true
-
-      - run: uv run coverage xml
 
       - name: Store coverage HTML
         uses: actions/upload-artifact@v4
