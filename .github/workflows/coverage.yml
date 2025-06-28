@@ -32,8 +32,8 @@ jobs:
       - name: Run tests with coverage
         run: bash scripts/test.sh
         env:
-          COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py${{ matrix.python-version }}
-          CONTEXT: ${{ runner.os }}-py${{ matrix.python-version }}
+          COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py
+          CONTEXT: ${{ runner.os }}-py
 
       - name: Store coverage files
         uses: actions/upload-artifact@v4
@@ -42,10 +42,6 @@ jobs:
           path: coverage
           include-hidden-files: true
 
-      - run: ls -la coverage
-      - run: uv run coverage combine coverage
-      - run: uv run coverage report
-      - run: uv run coverage html --title "Coverage for ${{ github.sha }}"
       - run: uv run coverage xml
 
       - name: Store coverage HTML
