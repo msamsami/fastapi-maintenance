@@ -2,7 +2,7 @@
 
 ## Latest Changes
 
-## Refactors
+### Refactors
 
 - ✏️ Add LRU caching to route existence checking logic and improve tracking of application route changes. PR [#24](https://github.com/msamsami/fastapi-maintenance/pull/24) by [@msamsami](https://github.com/msamsami).
 - ✏️ Refactor path matching logic and add LRU caching. PR [#23](https://github.com/msamsami/fastapi-maintenance/pull/23) by [@msamsami](https://github.com/msamsami).
