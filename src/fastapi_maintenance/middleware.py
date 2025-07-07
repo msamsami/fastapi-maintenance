@@ -7,13 +7,14 @@ from __future__ import annotations
 import asyncio
 import re
 import sys
-from typing import Awaitable, Callable, Optional, TypeVar, Union, cast
+from functools import lru_cache
+from re import Pattern
+from typing import Awaitable, Callable, Literal, Optional, TypeVar, Union, cast
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
 else:
     from typing_extensions import ParamSpec
-
 
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -52,6 +53,8 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         response_handler: Handler function (sync or async) to return a custom response during maintenance mode. Defaults to None for the default JSON response.
     """
 
+    _PATH_MATCH_CACHE_SIZE = 128
+
     def __init__(
         self,
         app: ASGIApp,
@@ -67,17 +70,24 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         self.response_handler = response_handler
 
         register_middleware_backend(self.backend)
-        self._forced_on_paths: list[re.Pattern[str]] = []
-        self._forced_off_paths: list[re.Pattern[str]] = []
+        self._forced_on_paths: tuple[Pattern[str], ...] = ()
+        self._forced_off_paths: tuple[Pattern[str], ...] = ()
         self._forced_paths_collected: bool = False
+        self._cached_path_matches_patterns = lru_cache(maxsize=self._PATH_MATCH_CACHE_SIZE)(self._path_matches_patterns)
 
     def _collect_forced_maintenance_paths(self, routes: list[APIRoute]) -> None:
+        # Clear instance-specific cache before recollection
+        self._cached_path_matches_patterns.cache_clear()
+
+        forced_on_paths, forced_off_paths = [], []
         for route in routes:
             if getattr(route.endpoint, "__dict__", {}).get(FORCE_MAINTENANCE_MODE_ON_ATTR, False):
-                self._forced_on_paths.append(route.path_regex)
+                forced_on_paths.append(route.path_regex)
                 continue
             if getattr(route.endpoint, "__dict__", {}).get(FORCE_MAINTENANCE_MODE_OFF_ATTR, False):
-                self._forced_off_paths.append(route.path_regex)
+                forced_off_paths.append(route.path_regex)
+        self._forced_on_paths = tuple(forced_on_paths)
+        self._forced_off_paths = tuple(forced_off_paths)
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if not self._forced_paths_collected:
@@ -89,12 +99,12 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # 1. Highest Precedence Block: Path is explicitly forced into maintenance
-        if self._is_path_forced_on(request):
+        if self._is_path_forced_on(request.url.path):
             # Path forced ON implies maintenance regardless of other settings
             return await self._get_maintenance_response(request)
 
         # 2. Highest Precedence Allow: Path is explicitly forced out of maintenance
-        if self._is_path_forced_off(request):
+        if self._is_path_forced_off(request.url.path):
             # Path forced OFF implies proceeding, bypassing other maintenance checks for this path
             return await call_next(request)
 
@@ -126,33 +136,45 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
             return self.enable_maintenance
         return await get_maintenance_mode(self.backend)
 
-    def _is_path_forced_on(self, request: Request) -> bool:
+    def _path_matches_patterns(self, path: str, patterns_type: Literal["on", "off"]) -> bool:
+        """Check if a path matches forced on or off regex patterns.
+
+        Args:
+            path: The URL path to check.
+            patterns_type: The type of patterns to match against, either "on" or "off".
+
+        Returns:
+            True if the path matches any of the specified patterns, False otherwise.
+        """
+        patterns = self._forced_on_paths if patterns_type == "on" else self._forced_off_paths
+        if not patterns:
+            return False
+        for pattern in patterns:
+            if re.fullmatch(pattern, path):
+                return True
+        return False
+
+    def _is_path_forced_on(self, path: str) -> bool:
         """Check if the maintenance mode is forced on for the request's path.
 
         Args:
-            request: The incoming request.
+            path: The incoming request path.
 
         Returns:
             True if the maintenance mode is forced on for the request's path, False otherwise.
         """
-        for regex_pattern in self._forced_on_paths:
-            if re.fullmatch(regex_pattern, request.url.path):
-                return True
-        return False
+        return self._cached_path_matches_patterns(path, "on")
 
-    def _is_path_forced_off(self, request: Request) -> bool:
+    def _is_path_forced_off(self, path: str) -> bool:
         """Check if the maintenance mode is forced off for the request's path.
 
         Args:
-            request: The incoming request.
+            path: The incoming request path.
 
         Returns:
             True if the maintenance mode is forced off for the request's path, False otherwise.
         """
-        for regex_pattern in self._forced_off_paths:
-            if re.fullmatch(regex_pattern, request.url.path):
-                return True
-        return False
+        return self._cached_path_matches_patterns(path, "off")
 
     async def _is_exempt(self, request: Request) -> bool:
         """Check if the request is exempt from maintenance mode.
