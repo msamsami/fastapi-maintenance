@@ -1,7 +1,5 @@
 import os
-import sys
 from pathlib import Path as SyncPath
-from unittest.mock import patch
 
 import pytest
 from anyio import Path
@@ -242,20 +240,3 @@ async def test_local_file_backend_requires_file_path():
     backend = _get_backend("file", file_path=file_path)
     assert isinstance(backend, LocalFileBackend)
     assert backend.file_path == file_path
-
-
-def test_fallback_imports():
-    """Test that Pydantic fallback imports work when main imports fail."""
-
-    # Remove the module to force reimport
-    if "fastapi_maintenance.backends" in sys.modules:
-        del sys.modules["fastapi_maintenance.backends"]
-
-    # Mock the pydantic.v1 modules to not exist
-    with patch.dict("sys.modules", {"pydantic.v1": None, "pydantic.v1.errors": None, "pydantic.v1.validators": None}):
-        # This will trigger the except block and use fallback imports
-        import fastapi_maintenance.backends
-
-    # Verify the module loaded and has the expected attributes
-    assert hasattr(fastapi_maintenance.backends, "BoolError")
-    assert hasattr(fastapi_maintenance.backends, "bool_validator")

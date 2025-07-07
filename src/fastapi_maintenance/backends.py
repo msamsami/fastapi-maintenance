@@ -9,13 +9,6 @@ from typing import Any, Optional
 
 from anyio import Path, open_file
 
-try:
-    from pydantic.v1.errors import BoolError
-    from pydantic.v1.validators import bool_validator
-except (ImportError, ModuleNotFoundError):
-    from pydantic.errors import BoolError  # type: ignore [no-redef]
-    from pydantic.validators import bool_validator  # type: ignore [no-redef]
-
 from ._constants import MAINTENANCE_MODE_ENV_VAR_NAME
 
 logger = logging.getLogger(__name__)
@@ -50,10 +43,12 @@ class BaseStateBackend(ABC):
         value = value.strip().lower()
         if not value:
             return False
-        try:
-            return bool_validator(value)
-        except BoolError as e:
-            raise ValueError("state value is not correct") from e
+        if value in {1, "1", "on", "t", "true", "y", "yes"}:
+            return True
+        elif value in {0, "0", "off", "f", "false", "n", "no"}:
+            return False
+        else:
+            raise ValueError("state value is not correct")
 
     @abstractmethod
     async def get_value(self) -> bool:
