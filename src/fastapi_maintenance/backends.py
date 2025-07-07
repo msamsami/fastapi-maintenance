@@ -13,8 +13,8 @@ try:
     from pydantic.v1.errors import BoolError
     from pydantic.v1.validators import bool_validator
 except (ImportError, ModuleNotFoundError):
-    from pydantic.errors import BoolError
-    from pydantic.validators import bool_validator
+    from pydantic.errors import BoolError  # type: ignore [no-redef]
+    from pydantic.validators import bool_validator  # type: ignore [no-redef]
 
 from ._constants import MAINTENANCE_MODE_ENV_VAR_NAME
 
