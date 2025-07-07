@@ -2,16 +2,19 @@
 
 ## Latest Changes
 
+## 0.0.5
+
+### Internal
+
+- ⬆ Bump package dependencies. PR [#25](https://github.com/msamsami/fastapi-maintenance/pull/25) by [@msamsami](https://github.com/msamsami).
+- 👷 Fix the order of running `coverage xml` command in the Coverage GitHub Action. PR [#22](https://github.com/msamsami/fastapi-maintenance/pull/22) by [@msamsami](https://github.com/msamsami).
+- 👷 Remove unnecessary steps and configurations from the Coverage GitHub Action. PR [#21](https://github.com/msamsami/fastapi-maintenance/pull/21) by [@msamsami](https://github.com/msamsami).
+- 🔧 Reformat pre-commit config file. PR [#18](https://github.com/msamsami/fastapi-maintenance/pull/18) by [@msamsami](https://github.com/msamsami).
+
 ### Refactors
 
 - ✏️ Add LRU caching to route existence checking logic and improve tracking of application route changes. PR [#24](https://github.com/msamsami/fastapi-maintenance/pull/24) by [@msamsami](https://github.com/msamsami).
 - ✏️ Refactor path matching logic and add LRU caching. PR [#23](https://github.com/msamsami/fastapi-maintenance/pull/23) by [@msamsami](https://github.com/msamsami).
-
-### Internal
-
-- 👷 Fix the order of running `coverage xml` command in the Coverage GitHub Action. PR [#22](https://github.com/msamsami/fastapi-maintenance/pull/22) by [@msamsami](https://github.com/msamsami).
-- 👷 Remove unnecessary steps and configurations from the Coverage GitHub Action. PR [#21](https://github.com/msamsami/fastapi-maintenance/pull/21) by [@msamsami](https://github.com/msamsami).
-- 🔧 Reformat pre-commit config file. PR [#18](https://github.com/msamsami/fastapi-maintenance/pull/18) by [@msamsami](https://github.com/msamsami).
 
 ### Docs
 

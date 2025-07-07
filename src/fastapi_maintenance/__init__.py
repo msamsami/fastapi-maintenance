@@ -5,7 +5,7 @@ Easily toggle maintenance mode for your API with flexible configuration options 
 the ability to exempt specific endpoints from maintenance status.
 """
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __author__ = "Mehdi Samsami"
 
 
