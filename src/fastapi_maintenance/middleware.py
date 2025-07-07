@@ -22,6 +22,7 @@ from fastapi.routing import APIRoute
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.routing import Match
 from starlette.types import ASGIApp
 
 from ._constants import (
@@ -31,7 +32,7 @@ from ._constants import (
 )
 from ._context import is_maintenance_override_ctx_active
 from ._core import get_maintenance_mode, register_middleware_backend
-from ._handlers import exempt_docs_endpoints, exempt_nonexistent_routes
+from ._handlers import exempt_docs_endpoints
 from .backends import BaseStateBackend
 
 P = ParamSpec("P")
@@ -53,7 +54,8 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         response_handler: Handler function (sync or async) to return a custom response during maintenance mode. Defaults to None for the default JSON response.
     """
 
-    _PATH_MATCH_CACHE_SIZE = 128
+    _FORCED_PATH_MATCH_CACHE_SIZE = 128
+    _ROUTE_EXISTS_CACHE_SIZE = 128
 
     def __init__(
         self,
@@ -70,14 +72,19 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         self.response_handler = response_handler
 
         register_middleware_backend(self.backend)
+        self._app_routes: list[APIRoute] = []
         self._forced_on_paths: tuple[Pattern[str], ...] = ()
         self._forced_off_paths: tuple[Pattern[str], ...] = ()
         self._forced_paths_collected: bool = False
-        self._cached_path_matches_patterns = lru_cache(maxsize=self._PATH_MATCH_CACHE_SIZE)(self._path_matches_patterns)
+        self._cached_path_matches_patterns = lru_cache(maxsize=self._FORCED_PATH_MATCH_CACHE_SIZE)(
+            self._path_matches_patterns
+        )
+        self._cached_route_exists = lru_cache(maxsize=self._ROUTE_EXISTS_CACHE_SIZE)(self._route_exists)
 
     def _collect_forced_maintenance_paths(self, routes: list[APIRoute]) -> None:
-        # Clear instance-specific cache before recollection
+        # Clear instance-specific caches before recollection
         self._cached_path_matches_patterns.cache_clear()
+        self._cached_route_exists.cache_clear()
 
         forced_on_paths, forced_off_paths = [], []
         for route in routes:
@@ -90,12 +97,13 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
         self._forced_off_paths = tuple(forced_off_paths)
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        if not self._forced_paths_collected:
-            self._collect_forced_maintenance_paths(request.app.routes)
+        if not self._forced_paths_collected or self._app_routes != request.app.routes:
+            self._app_routes = request.app.routes.copy()
+            self._collect_forced_maintenance_paths(self._app_routes)
             self._forced_paths_collected = True
 
         # Built-in exemption: Non-existent paths/methods should return normal HTTP errors, not maintenance
-        if exempt_nonexistent_routes(request):
+        if not self._cached_route_exists(request.url.path, request.method):
             return await call_next(request)
 
         # 1. Highest Precedence Block: Path is explicitly forced into maintenance
@@ -125,6 +133,23 @@ class MaintenanceModeMiddleware(BaseHTTPMiddleware):
 
         # Otherwise, continue with the request
         return await call_next(request)
+
+    def _route_exists(self, path: str, method: str) -> bool:
+        """Check if a route exists for the given path and method.
+
+        Args:
+            path: The URL path to check.
+            method: The HTTP method to check.
+
+        Returns:
+            True if a route exists, False otherwise.
+        """
+        scope = {"type": "http", "path": path, "method": method}
+        for route in self._app_routes:
+            match, _ = route.matches(scope)
+            if match == Match.FULL:
+                return True
+        return False
 
     async def _is_maintenance_active(self) -> bool:
         """Check if maintenance mode is active.
