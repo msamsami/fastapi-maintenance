@@ -2,6 +2,10 @@
 
 ## Latest Changes
 
+### Docs
+
+- 📝 Remove useless context manager import in docs. PR [#26](https://github.com/msamsami/fastapi-maintenance/pull/26) by [@msamsami](https://github.com/msamsami).
+
 ## 0.0.5
 
 ### Internal
