@@ -137,11 +137,7 @@ You can use context managers to temporarily enforce the maintenance state for sp
 
 ```python
 from fastapi import FastAPI
-from fastapi_maintenance import (
-    MaintenanceModeMiddleware,
-    maintenance_mode_off,
-    maintenance_mode_on,
-)
+from fastapi_maintenance import MaintenanceModeMiddleware, maintenance_mode_on
 
 app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
