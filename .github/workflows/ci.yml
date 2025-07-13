@@ -4,6 +4,13 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - "src/fastapi_maintenance/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "scripts/lint.sh"
+      - "pyproject.toml"
+      - "uv.lock"
   workflow_call:
   workflow_dispatch:
 
