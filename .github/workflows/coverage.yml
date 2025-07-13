@@ -8,7 +8,6 @@ on:
       - "src/fastapi_maintenance/**"
       - "tests/**"
       - ".github/workflows/coverage.yml"
-      - "scripts/test.sh"
       - "pyproject.toml"
       - "uv.lock"
   workflow_call:
@@ -38,25 +37,13 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          bash scripts/test.sh
+          uv run coverage run -m pytest tests
+          uv run coverage combine
+          uv run coverage report
           uv run coverage xml
         env:
           COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py
           CONTEXT: ${{ runner.os }}-py
-
-      - name: Store coverage files
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage
-          include-hidden-files: true
-
-      - name: Store coverage HTML
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-html
-          path: htmlcov
-          include-hidden-files: true
 
       - name: Store coverage XML
         uses: actions/upload-artifact@v4
