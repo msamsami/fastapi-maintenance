@@ -2,6 +2,11 @@
 
 ## Latest Changes
 
+### Internal
+
+- 👷 Prevent creating and storing non-XML coverage reports in Coverage GitHub Action. PR [#28](https://github.com/msamsami/fastapi-maintenance/pull/28) by [@msamsami](https://github.com/msamsami).
+- 👷 Specify trigger paths for GitHub Actions. PR [#27](https://github.com/msamsami/fastapi-maintenance/pull/27) by [@msamsami](https://github.com/msamsami).
+
 ### Docs
 
 - 📝 Remove useless context manager import in docs. PR [#26](https://github.com/msamsami/fastapi-maintenance/pull/26) by [@msamsami](https://github.com/msamsami).
