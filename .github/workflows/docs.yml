@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "docs/**"
+      - "README.md"
+      - ".github/workflows/docs.yml"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - "uv.lock"
   workflow_dispatch:
 
 permissions:

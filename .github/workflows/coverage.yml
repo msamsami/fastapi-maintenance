@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "src/fastapi_maintenance/**"
+      - "tests/**"
+      - ".github/workflows/coverage.yml"
+      - "scripts/test.sh"
+      - "pyproject.toml"
+      - "uv.lock"
   workflow_call:
   workflow_dispatch:
 
