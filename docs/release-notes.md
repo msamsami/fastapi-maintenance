@@ -4,6 +4,7 @@
 
 ### Internal
 
+- ⬆ Bump package dependencies. PR [#30](https://github.com/msamsami/fastapi-maintenance/pull/30) by [@msamsami](https://github.com/msamsami).
 - ⬆ Bump package dependencies. PR [#29](https://github.com/msamsami/fastapi-maintenance/pull/29) by [@msamsami](https://github.com/msamsami).
 - 👷 Prevent creating and storing non-XML coverage reports in Coverage GitHub Action. PR [#28](https://github.com/msamsami/fastapi-maintenance/pull/28) by [@msamsami](https://github.com/msamsami).
 - 👷 Specify trigger paths for GitHub Actions. PR [#27](https://github.com/msamsami/fastapi-maintenance/pull/27) by [@msamsami](https://github.com/msamsami).
