@@ -71,23 +71,3 @@ async def stable_feature():
 ```
 
 In this example, the `/beta-feature` endpoint will always return the maintenance response, regardless of the global maintenance mode state.
-
-## Using with Dependency Injection
-
-The decorators work well with FastAPI's dependency injection system:
-
-```python
-from fastapi import FastAPI, Depends
-from fastapi_maintenance import MaintenanceModeMiddleware, force_maintenance_mode_off
-
-def common_parameters():
-    return {"param": "value"}
-
-app = FastAPI()
-app.add_middleware(MaintenanceModeMiddleware)
-
-@app.get("/api/admin")
-@force_maintenance_mode_off
-async def admin_endpoint(commons: dict = Depends(common_parameters)):
-    return {"admin": True, **commons}
-```
