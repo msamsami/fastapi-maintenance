@@ -2,7 +2,7 @@
 
 We welcome contributions from the community to help improve FastAPI Maintenance.
 
-First, you might want to see the basic ways to [help FastAPI Maintenance package and get help](help.md).
+First, you might want to see the basic ways to [help FastAPI Maintenance project and get help](help.md).
 
 ## Developing
 
@@ -49,7 +49,7 @@ We use pytest for testing. To run the tests and generate coverage reports:
 bash scripts/test.sh
 ```
 
-This command generates a directory `./htmlcov/`, if you open the file `./htmlcov/index.html` in your browser, you can explore interactively the regions of code that are covered by the tests, and notice if there is any region missing.
+This command generates a directory `./htmlcov/`. Open the file `./htmlcov/index.html` in your browser to interactively explore which regions of code are covered by tests and identify any missing coverage.
 
 ## Docs
 
