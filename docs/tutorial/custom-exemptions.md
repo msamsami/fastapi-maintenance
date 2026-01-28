@@ -63,12 +63,12 @@ The handler function must:
 # Synchronous handler
 def is_exempt(request: Request) -> bool:
     # Logic here
-    return True/False
+    return True  # or False
 
 # Asynchronous handler
 async def is_exempt(request: Request) -> bool:
     # Async logic here
-    return True/False
+    return True  # or False
 ```
 
 ### Return Value
@@ -79,7 +79,7 @@ The return value determines how the request is handled:
 
 ### Execution Context
 
-The handler runs for every request when maintenance middleware is in place, so:
+The handler is evaluated for every request that reaches the maintenance middleware, so:
 - Keep it lightweight to avoid performance issues
 - Handle all exceptions internally
 - Avoid side effects that could impact other requests
@@ -112,7 +112,10 @@ def is_exempt(request: Request) -> bool:
     client_host = request.client.host if request.client else None
 
     # Exempt localhost and internal network
-    if client_host in ["127.0.0.1", "::1"] or client_host.startswith("10."):
+    if client_host and (
+        client_host in ["127.0.0.1", "::1"]
+        or client_host.startswith("10.")
+    ):
         return True
 
     return False
