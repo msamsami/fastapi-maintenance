@@ -56,7 +56,7 @@ from fastapi_maintenance import MaintenanceModeMiddleware
 
 app = FastAPI()
 
-async def custom_maintenance_response(request: Request) -> JSONResponse:
+def custom_maintenance_response(request: Request) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         content={
@@ -86,7 +86,7 @@ from fastapi_maintenance import MaintenanceModeMiddleware
 
 app = FastAPI()
 
-async def html_maintenance_page(request: Request) -> HTMLResponse:
+def html_maintenance_page(request: Request) -> HTMLResponse:
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -153,7 +153,7 @@ from fastapi_maintenance import MaintenanceModeMiddleware
 
 app = FastAPI()
 
-async def content_negotiated_response(request: Request) -> Response:
+def content_negotiated_response(request: Request) -> Response:
     accept = request.headers.get("accept", "")
 
     # Return HTML for browser requests
@@ -191,11 +191,15 @@ app = FastAPI()
 # Set up templates
 templates = Jinja2Templates(directory="templates")
 
-async def template_maintenance_page(request: Request) -> Response:
+def template_maintenance_page(request: Request) -> Response:
     # Pass data to the template
     return templates.TemplateResponse(
         "maintenance.html",
-        {"request": request, "site_name": "My API", "estimated_time": "2 hours"},
+        {
+            "request": request,
+            "site_name": "My API",
+            "estimated_time": "2 hours",
+        },
         status_code=503
     )
 
@@ -238,7 +242,7 @@ from fastapi_maintenance import MaintenanceModeMiddleware
 
 app = FastAPI()
 
-async def path_aware_response(request: Request) -> JSONResponse:
+def path_aware_response(request: Request) -> JSONResponse:
     # Customize message based on path
     path = request.url.path
 
@@ -257,5 +261,43 @@ async def path_aware_response(request: Request) -> JSONResponse:
 app.add_middleware(
     MaintenanceModeMiddleware,
     response_handler=path_aware_response
+)
+```
+
+### Async Response Handler
+
+When you need to fetch maintenance information from a database or external service, you can use an async response handler:
+
+```python
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi_maintenance import MaintenanceModeMiddleware
+import httpx
+
+app = FastAPI()
+
+async def async_maintenance_response(request: Request) -> JSONResponse:
+    # Fetch maintenance status from external status page API
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("https://status.example.com/api/maintenance")
+            status_data = response.json()
+            estimated_end = status_data.get("estimated_end", "unknown")
+        except:
+            estimated_end = "unknown"
+
+    return JSONResponse(
+        content={
+            "status": "maintenance",
+            "message": "Service temporarily unavailable",
+            "estimated_completion": estimated_end
+        },
+        status_code=503,
+        headers={"Retry-After": "1800"}
+    )
+
+app.add_middleware(
+    MaintenanceModeMiddleware,
+    response_handler=async_maintenance_response
 )
 ```
