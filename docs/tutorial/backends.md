@@ -1,12 +1,12 @@
 # Backend Options
 
-FastAPI Maintenance provides flexible backend storage options for managing the maintenance mode state. This allows you to store the maintenance mode state in different ways depending on your application's needs.
+FastAPI Maintenance provides flexible backend storage options for managing the maintenance mode state. This allows you to store and read the maintenance mode state in different ways depending on your application's needs.
 
 ## Available Backends
 
 The package currently includes two built-in backend options:
 
-1. **Environment Variable Backend** (default): Uses environment variables to store the maintenance mode state
+1. **Environment Variable Backend** (default): Reads the maintenance mode state from environment variables
 2. **Local File Backend**: Uses a local file to store the maintenance mode state
 
 ## Environment Variable Backend
@@ -41,7 +41,7 @@ The environment variable backend is **read-only** at runtime. This means:
 
 - You can only set the maintenance mode state *before* starting your application.
 - Direct calls to `set_maintenance_mode()` will log a warning and have no effect.
-- However, context manager `maintenance_mode_on()` **will work as expected for the duration of the context block**. They achieve this by using a temporary, in-memory override of the maintenance state. The actual environment variable is not changed. This allows you to temporarily simulate maintenance mode changes even with the environment variable backend.
+- However, context manager `maintenance_mode_on()` **will work as expected for the duration of the context block**. It achieves this by using a temporary, in-memory override of the maintenance state. The actual environment variable is not changed. This allows you to temporarily simulate maintenance mode changes even with the environment variable backend.
 
 Use this backend when you primarily manage maintenance mode state externally (e.g., via deployment scripts or orchestration tools) but still want the flexibility of temporary overrides within your code using context managers.
 
