@@ -1,13 +1,13 @@
 # Advanced Usage
 
-This section covers advanced usage patterns and integration scenarios for the FastAPI Maintenance package. These advanced usage patterns demonstrate how FastAPI Maintenance can be integrated into complex systems and workflows.
+This section covers advanced usage patterns and integration scenarios, demonstrating how FastAPI Maintenance can be integrated into complex systems and workflows.
 
 ## Combining Multiple Features
 
 You can combine various features of FastAPI Maintenance for sophisticated maintenance scenarios:
 
 ```python
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi_maintenance import (
     MaintenanceModeMiddleware,
@@ -62,6 +62,8 @@ async def update_system():
 You can use FastAPI's events to configure maintenance mode during application startup and shutdown:
 
 ```python
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi_maintenance import (
     MaintenanceModeMiddleware,
@@ -72,18 +74,16 @@ from fastapi_maintenance import (
 # Configure backend
 configure_backend("file", file_path="maintenance_mode.txt")
 
-app = FastAPI()
-app.add_middleware(MaintenanceModeMiddleware)
-
-@app.on_event("startup")
-async def startup_event():
-    # Clear any maintenance mode from previous crashes on startup
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Clear any maintenance mode from previous crashes
     await set_maintenance_mode(False)
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    # Enable maintenance mode during shutdown
+    yield
+    # Shutdown: Enable maintenance mode
     await set_maintenance_mode(True)
+
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(MaintenanceModeMiddleware)
 ```
 
 ## Integration with Other Middleware

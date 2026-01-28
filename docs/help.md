@@ -1,6 +1,6 @@
 # Help
 
-This section provides information on how to get help with FastAPI Maintenance and how you can contribute to the project.
+This section provides information on how to get help with FastAPI Maintenance and how you can support the project.
 
 ## Getting Help
 

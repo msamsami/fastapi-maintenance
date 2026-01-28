@@ -71,7 +71,7 @@ app = FastAPI()
 app.add_middleware(MaintenanceModeMiddleware)
 
 @app.get("/")
-def root():
+async def root():
     return {"message": "Hello World"}
 ```
 
