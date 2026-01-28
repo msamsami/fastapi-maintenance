@@ -110,6 +110,7 @@ Use the CLI in monitoring scripts:
 #!/bin/bash
 
 # Check maintenance status and act accordingly
+# Note: This script relies on the CLI output containing "ON" for active maintenance
 if fastapi-maintenance status --backend env --var-name PROD_MAINTENANCE_MODE | grep -q "ON"; then
     echo "Application is in maintenance mode"
     exit 1
@@ -128,14 +129,11 @@ Integrate with deployment automation:
 
 # Check if maintenance mode is active before deployment
 echo "Checking maintenance mode status..."
-fastapi-maintenance status --backend file --file-path /app/maintenance.txt
 
-# The exit code can be used in conditional logic
-if [ $? -eq 0 ]; then
-    echo "Status check completed successfully"
-else
-    echo "Failed to check maintenance status"
-    exit 1
+STATUS=$(fastapi-maintenance status --backend file --file-path /app/maintenance.txt)
+
+if echo "$STATUS" | grep -q "ON"; then
+    echo "Warning: Application is in maintenance mode"
 fi
 ```
 
