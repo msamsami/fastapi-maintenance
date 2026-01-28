@@ -6,9 +6,7 @@ FastAPI Maintenance provides an async context manager that temporarily enables m
 - Application deployments
 - Data imports or exports
 - Content synchronization and updates
-- System updates
 - User permission and role updates
-- Rolling out new features
 - Temporarily disabling services during critical operations
 
 ## Basic Usage
@@ -115,9 +113,11 @@ async def custom_maintenance_operation():
 
 ## Nesting Context Managers
 
-You can nest the `maintenance_mode_on` context manager. When nesting, the innermost context will maintain the state established by the outer context:
+You can nest the `maintenance_mode_on` context manager. When nesting, maintenance mode remains ON throughout all nested contexts until the outermost context exits:
 
 ```python
+from fastapi_maintenance import maintenance_mode_on, get_maintenance_mode
+
 async def complex_operation():
     # Start with maintenance OFF
     assert not await get_maintenance_mode()
